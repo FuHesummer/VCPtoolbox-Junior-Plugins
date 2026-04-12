@@ -48,7 +48,20 @@
                 // Try fetching the hot data from the plugin's cache endpoint
                 const hotRes = await fetch(`${API}/dailyhot`);
                 if (hotRes.ok) {
-                    cachedData = await hotRes.json();
+                    const raw = await hotRes.json();
+                    // API returns { success, data: [{source, title, url}, ...] }
+                    const items = raw.data || raw;
+                    // Group by source
+                    cachedData = {};
+                    if (Array.isArray(items)) {
+                        for (const item of items) {
+                            const src = item.source || '未知';
+                            if (!cachedData[src]) cachedData[src] = [];
+                            cachedData[src].push(item);
+                        }
+                    } else if (typeof items === 'object') {
+                        cachedData = items; // Already grouped
+                    }
                     renderTabs();
                 } else {
                     document.getElementById('hot-list').innerHTML = '<p class="error">热榜数据暂未就绪，请等待插件刷新缓存</p>';
