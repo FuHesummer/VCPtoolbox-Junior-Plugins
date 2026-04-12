@@ -438,3 +438,12 @@ Python 插件示例：
 ## 协议
 
 MIT License — 与主项目一致
+
+---
+
+## Contributors
+
+| 贡献者 | 角色 |
+|--------|------|
+| [FuHe](https://github.com/FuHesummer) | 项目发起 / 架构设计 |
+| 辉宝 | 项目命名 (VCPtoolbox-Junior) |
