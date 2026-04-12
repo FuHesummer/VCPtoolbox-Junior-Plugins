@@ -22,9 +22,121 @@ cp -r plugins-repo/EmojiListGenerator /path/to/VCPtoolbox-Junior/Plugin/
 
 ## 插件列表
 
+### AI 协作
+
 | 插件 | 类型 | 说明 |
 |------|------|------|
-| *待添加* | - | - |
+| AgentAssistant | hybridservice | Agent 团队协作，支持即时/定时/异步委托模式 |
+| AgentDream | hybridservice | Agent 梦境系统（回顾记忆、联想式沉浸梦境） |
+| AgentMessage | synchronous | 通过 WebSocket 向用户前端推送格式化消息 |
+| MagiAgent | hybridservice | EVA 三贤人会议系统，多角度讨论复杂问题 |
+| VCPTaskAssistant | hybridservice | 任务派发中心（定时/一次性/论坛巡航） |
+
+### 图像/视频生成
+
+| 插件 | 类型 | 说明 |
+|------|------|------|
+| GeminiImageGen | synchronous | Google Gemini 图像生成与编辑 |
+| ComfyCloudGen | synchronous | Comfy Cloud 云端生成，支持 895+ 模型 |
+| ComfyUIGen | synchronous | 本地 ComfyUI 工作流图像生成 |
+| NovelAIGen | synchronous | NovelAI 动漫风格图片生成 |
+| GrokVideo | synchronous | Grok 视频生成（文生视频/图生视频/续写/拼接） |
+| VideoGenerator | asynchronous | Wan2.1 文本/图像到视频生成 |
+| SunoGen | synchronous | Suno AI 原创音乐生成 |
+
+### 搜索
+
+| 插件 | 类型 | 说明 |
+|------|------|------|
+| GoogleSearch | synchronous | Google Custom Search API |
+| TavilySearch | synchronous | Tavily 高级网络搜索 |
+| SerpSearch | synchronous | SerpApi 多搜索引擎（Bing/DuckDuckGo/Scholar） |
+| VSearch | synchronous | 语义级并发深度搜索 |
+| FlashDeepSearch | synchronous | 多维度跨领域深度研究报告生成 |
+
+### 文件/系统
+
+| 插件 | 类型 | 说明 |
+|------|------|------|
+| FileOperator | synchronous | 文件系统多操作（读/写/移/删） |
+| PowerShellExecutor | synchronous | PowerShell 命令执行（阻塞/后台） |
+| LinuxShellExecutor | synchronous | Linux Shell 六层安全执行器 |
+| VCPEverything | synchronous | Everything 毫秒级文件搜索 |
+| ProjectAnalyst | synchronous | 项目文件夹分析报告生成 |
+| FileServer | service | 受密码保护的文件服务 |
+| ImageServer | service | 受密码保护的图片服务 |
+
+### 浏览器/网页
+
+| 插件 | 类型 | 说明 |
+|------|------|------|
+| ChromeBridge | hybridservice | Chrome 浏览器实时观察与控制 |
+| UrlFetch | synchronous | 通用 URL 内容获取（文本/截图） |
+| BilibiliFetch | synchronous | B站视频内容获取（字幕/弹幕/评论/截图） |
+| XiaohongshuFetch | synchronous | 小红书笔记爬虫 |
+| DeepWikiVCP | synchronous | DeepWiki 内容抓取转 Markdown |
+
+### 论坛
+
+| 插件 | 类型 | 说明 |
+|------|------|------|
+| VCPForum | synchronous | 本地论坛发帖/回帖 |
+| VCPForumOnline | synchronous | 在线论坛完整操作（浏览/发帖/点赞/搜索/私信） |
+| VCPForumOnlinePatrol | static | 定时论坛巡航（自动回复/发帖） |
+| VCPForumLister | static | 论坛热门帖子列表生成 |
+
+### 多媒体
+
+| 插件 | 类型 | 说明 |
+|------|------|------|
+| ImageProcessor | messagePreprocessor | 多模态数据提取（图像/音频/视频） |
+| CapturePreprocessor | messagePreprocessor | 屏幕/窗口截图预处理 |
+| PyCameraCapture | synchronous | Python 摄像头捕获 |
+| PyScreenshot | synchronous | Python 桌面截图 |
+| MIDITranslator | hybridservice | MIDI 文件解析与生成 |
+
+### 知识/学术
+
+| 插件 | 类型 | 说明 |
+|------|------|------|
+| PaperReader | synchronous | 超文本递归阅读器（PDF 深度阅读/证据追溯） |
+| ArxivDailyPapers | static | Arxiv 每日论文推送 |
+| PubMedSearch | synchronous | PubMed 文献检索与分析 |
+| KEGGSearch | synchronous | KEGG 生物数据库查询 |
+| NCBIDatasets | synchronous | NCBI 基因组/基因数据检索 |
+
+### 工具
+
+| 插件 | 类型 | 说明 |
+|------|------|------|
+| SciCalculator | synchronous | 科学计算器 |
+| Randomness | synchronous | 随机事件生成（抽牌/掷骰/牌堆管理） |
+| TarotDivination | synchronous | 塔罗牌占卜 |
+| JapaneseHelper | synchronous | 日语学习助手（语法解析/句型识别） |
+| EmojiListGenerator | static | 表情包列表生成器 |
+| ThoughtClusterManager | synchronous | 思维链文件管理（元自学习） |
+
+### 系统服务
+
+| 插件 | 类型 | 说明 |
+|------|------|------|
+| DailyHot | static | 全平台今日热榜 |
+| WeatherReporter | static | 天气预报（注入 {{VCPWeatherInfo}}） |
+| WeatherInfoNow | static | 实时天气简报 |
+| ScheduleManager | synchronous | 用户日程管理 |
+| ScheduleBriefing | static | 日程自动简报 |
+| WorkspaceInjector | messagePreprocessor | 工作区目录树动态注入 |
+
+### 桥接/集成
+
+| 插件 | 类型 | 说明 |
+|------|------|------|
+| SnowBridge | hybridservice | Snow CLI 工具桥接 |
+| VCPToolBridge | hybridservice | VCP 工具向外部系统导出 |
+| MCPO | synchronous | MCP 工具桥接（自动发现/调用） |
+| MCPOMonitor | static | MCP 服务状态监控 |
+| VCPTavern | hybridservice | 上下文注入器（类 SillyTavern） |
+| TencentCOSBackup | synchronous | 腾讯云 COS 备份 |
 
 ---
 
