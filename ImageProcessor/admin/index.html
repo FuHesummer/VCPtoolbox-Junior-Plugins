@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>多模态缓存管理</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; padding: 16px; }
+        h2 { margin-bottom: 12px; }
+        .controls { display: flex; gap: 8px; margin-bottom: 16px; }
+        .controls input { flex: 1; padding: 8px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; }
+        .controls button { padding: 8px 16px; background: #0ea5e9; border: none; border-radius: 6px; color: white; cursor: pointer; }
+        .controls button:hover { background: #0284c7; }
+        .cache-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+        .cache-item { background: #1e293b; border-radius: 8px; padding: 12px; border: 1px solid #334155; }
+        .cache-item img { width: 100%; border-radius: 4px; margin-bottom: 8px; max-height: 150px; object-fit: cover; }
+        .cache-meta { font-size: 0.75rem; color: #94a3b8; }
+        .cache-desc { font-size: 0.85rem; margin: 4px 0; }
+        .btn-delete { background: #dc2626; border: none; padding: 4px 8px; border-radius: 4px; color: white; cursor: pointer; font-size: 0.75rem; }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
+        .pagination button { padding: 6px 12px; background: #334155; border: none; border-radius: 4px; color: #f8fafc; cursor: pointer; }
+        .pagination button.active { background: #0ea5e9; }
+        .stats { font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px; }
+        .loading { text-align: center; padding: 40px; opacity: 0.5; }
+        .error { color: #ef4444; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+    <h2>多模态缓存管理</h2>
+    <div class="stats" id="stats"></div>
+    <div class="controls">
+        <input type="text" id="search" placeholder="搜索描述..." oninput="loadCache(1)">
+        <button onclick="loadCache(1)">搜索</button>
+    </div>
+    <div id="content"><p class="loading">加载中...</p></div>
+    <div class="pagination" id="pagination"></div>
+    <script>
+        const API = '/admin_api';
+        let currentPage = 1;
+
+        async function loadCache(page) {
+            currentPage = page || 1;
+            const search = document.getElementById('search').value;
+            const content = document.getElementById('content');
+            content.innerHTML = '<p class="loading">加载中...</p>';
+
+            try {
+                const params = new URLSearchParams({ page: currentPage, pageSize: 20 });
+                if (search) params.set('search', search);
+                const res = await fetch(`${API}/multimodal-cache?${params}`);
+                if (!res.ok) throw new Error('缓存接口不可用');
+                const data = await res.json();
+
+                document.getElementById('stats').textContent = `共 ${data.total || 0} 条缓存`;
+
+                if (!data.items || data.items.length === 0) {
+                    content.innerHTML = '<p class="loading">暂无缓存数据</p>';
+                    return;
+                }
+
+                content.innerHTML = '<div class="cache-grid">' + data.items.map(item => `
+                    <div class="cache-item">
+                        ${item.mimeType?.startsWith('image/') ? `<img src="data:${item.mimeType};base64,${item.base64?.substring(0, 200)}..." alt="preview">` : ''}
+                        <div class="cache-desc">${item.description || '无描述'}</div>
+                        <div class="cache-meta">${item.mimeType || ''} · ${new Date(item.timestamp * 1000).toLocaleDateString()}</div>
+                        <button class="btn-delete" onclick="deleteItem('${item.hash}')">删除</button>
+                    </div>
+                `).join('') + '</div>';
+
+                renderPagination(data.total, 20);
+            } catch (e) {
+                content.innerHTML = `<p class="error">${e.message}</p>`;
+            }
+        }
+
+        function renderPagination(total, pageSize) {
+            const pages = Math.ceil(total / pageSize);
+            const el = document.getElementById('pagination');
+            if (pages <= 1) { el.innerHTML = ''; return; }
+            el.innerHTML = Array.from({ length: Math.min(pages, 10) }, (_, i) =>
+                `<button class="${i + 1 === currentPage ? 'active' : ''}" onclick="loadCache(${i + 1})">${i + 1}</button>`
+            ).join('');
+        }
+
+        async function deleteItem(hash) {
+            if (!confirm('确定删除？')) return;
+            await fetch(`${API}/multimodal-cache/${hash}`, { method: 'DELETE' });
+            loadCache(currentPage);
+        }
+
+        loadCache(1);
+    </script>
+</body>
+</html>

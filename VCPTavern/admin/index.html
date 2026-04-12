@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>VCPTavern 预设编辑</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; padding: 16px; }
+        h2 { margin-bottom: 12px; }
+        .preset-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .preset-item { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px; cursor: pointer; transition: border-color 0.2s; }
+        .preset-item:hover { border-color: #0ea5e9; }
+        .preset-item.active { border-color: #0ea5e9; background: #1e3a5f; }
+        .preset-name { font-weight: 600; margin-bottom: 4px; }
+        .preset-desc { font-size: 0.8rem; color: #94a3b8; }
+        .editor { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px; }
+        .editor textarea { width: 100%; min-height: 300px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; color: #f8fafc; padding: 12px; font-family: monospace; font-size: 0.85rem; resize: vertical; }
+        .editor-actions { margin-top: 12px; display: flex; gap: 8px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+        .btn-save { background: #0ea5e9; color: white; }
+        .btn-save:hover { background: #0284c7; }
+        .btn-delete { background: #dc2626; color: white; }
+        .btn-new { background: #10b981; color: white; }
+        .loading { text-align: center; padding: 40px; opacity: 0.5; }
+        .error { color: #ef4444; text-align: center; padding: 20px; }
+        .status { font-size: 0.8rem; color: #4ade80; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <h2>VCPTavern 预设编辑</h2>
+    <div id="content"><p class="loading">加载中...</p></div>
+    <script>
+        const API = '/admin_api';
+        let presets = [];
+        let selectedPreset = null;
+
+        async function loadPresets() {
+            const content = document.getElementById('content');
+            try {
+                const res = await fetch(`${API}/vcptavern/presets`);
+                if (!res.ok) throw new Error('VCPTavern 接口不可用');
+                presets = await res.json();
+                render();
+            } catch (e) {
+                content.innerHTML = `<p class="error">${e.message}<br><small>请确认 VCPTavern 插件已启用</small></p>`;
+            }
+        }
+
+        function render() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div style="display: flex; gap: 16px;">
+                    <div style="width: 250px; flex-shrink: 0;">
+                        <button class="btn btn-new" onclick="newPreset()" style="width: 100%; margin-bottom: 8px;">+ 新建预设</button>
+                        <div class="preset-list">
+                            ${presets.map((p, i) => `
+                                <div class="preset-item ${selectedPreset === i ? 'active' : ''}" onclick="selectPreset(${i})">
+                                    <div class="preset-name">${p.name || '未命名'}</div>
+                                    <div class="preset-desc">${(p.content || '').substring(0, 50)}...</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div style="flex: 1;">
+                        ${selectedPreset !== null ? `
+                            <div class="editor">
+                                <input type="text" value="${presets[selectedPreset]?.name || ''}" id="preset-name"
+                                    style="width: 100%; padding: 8px; background: #0f172a; border: 1px solid #334155; border-radius: 4px; color: #f8fafc; margin-bottom: 8px;">
+                                <textarea id="preset-content">${presets[selectedPreset]?.content || ''}</textarea>
+                                <div class="editor-actions">
+                                    <button class="btn btn-save" onclick="savePreset()">保存</button>
+                                    <button class="btn btn-delete" onclick="deletePreset()">删除</button>
+                                </div>
+                                <div class="status" id="status"></div>
+                            </div>
+                        ` : '<p class="loading">选择一个预设进行编辑</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectPreset(i) { selectedPreset = i; render(); }
+        function newPreset() {
+            presets.push({ name: '新预设', content: '' });
+            selectedPreset = presets.length - 1;
+            render();
+        }
+
+        async function savePreset() {
+            const name = document.getElementById('preset-name').value;
+            const content = document.getElementById('preset-content').value;
+            presets[selectedPreset] = { name, content };
+            try {
+                await fetch(`${API}/vcptavern/presets`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(presets)
+                });
+                document.getElementById('status').textContent = '已保存';
+            } catch (e) {
+                document.getElementById('status').textContent = '保存失败: ' + e.message;
+            }
+        }
+
+        async function deletePreset() {
+            if (!confirm('确定删除？')) return;
+            presets.splice(selectedPreset, 1);
+            selectedPreset = null;
+            render();
+            await fetch(`${API}/vcptavern/presets`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(presets)
+            });
+        }
+
+        loadPresets();
+    </script>
+</body>
+</html>
