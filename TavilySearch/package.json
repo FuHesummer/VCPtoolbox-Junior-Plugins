@@ -1,0 +1,7 @@
+{
+  "name": "vcptoolbox-plugin-tavilysearch",
+  "private": true,
+  "dependencies": {
+    "@tavily/core": "^0.5.2"
+  }
+}

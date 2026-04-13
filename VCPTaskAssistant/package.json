@@ -1,0 +1,7 @@
+{
+  "name": "vcptoolbox-plugin-vcptaskassistant",
+  "private": true,
+  "dependencies": {
+    "node-schedule": "^2.1.1"
+  }
+}

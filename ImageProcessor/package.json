@@ -1,0 +1,7 @@
+{
+  "name": "vcptoolbox-plugin-imageprocessor",
+  "private": true,
+  "dependencies": {
+    "better-sqlite3": "^12.4.1"
+  }
+}

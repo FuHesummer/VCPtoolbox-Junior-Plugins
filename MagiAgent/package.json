@@ -1,0 +1,8 @@
+{
+  "name": "vcptoolbox-plugin-magiagent",
+  "private": true,
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.5.0"
+  }
+}

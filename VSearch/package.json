@@ -1,0 +1,10 @@
+{
+  "name": "vcptoolbox-plugin-vsearch",
+  "private": true,
+  "dependencies": {
+    "@tavily/core": "^0.5.2",
+    "axios": "^1.6.0",
+    "dotenv": "^16.5.0",
+    "https-proxy-agent": "^7.0.4"
+  }
+}

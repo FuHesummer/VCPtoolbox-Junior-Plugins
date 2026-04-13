@@ -1,0 +1,7 @@
+{
+  "name": "vcptoolbox-plugin-comfycloudgen",
+  "private": true,
+  "dependencies": {
+    "puppeteer-core": "^22.0.0"
+  }
+}

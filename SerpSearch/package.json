@@ -1,0 +1,8 @@
+{
+  "name": "vcptoolbox-plugin-serpsearch",
+  "private": true,
+  "dependencies": {
+    "serpapi": "^2.2.1",
+    "uuid": "^9.0.0"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "vcptoolbox-plugin-tarotdivination",
+  "private": true,
+  "dependencies": {
+    "chinese-lunar-calendar": "^1.0.1"
+  }
+}
