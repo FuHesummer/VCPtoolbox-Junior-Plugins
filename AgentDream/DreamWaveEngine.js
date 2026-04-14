@@ -8,8 +8,14 @@ const fsSync = require('fs');
 const path = require('path');
 
 const DREAM_MAX_RECALL_TOKENS = parseInt(process.env.DREAM_MAX_RECALL_TOKENS || '60000', 10);
-const DAILY_NOTE_ROOT = process.env.KNOWLEDGEBASE_ROOT_PATH ||
-    (process.env.PROJECT_BASE_PATH ? path.join(process.env.PROJECT_BASE_PATH, 'dailynote') : path.join(__dirname, '..', '..', 'dailynote'));
+
+// [Junior 协议] Agent 日记根目录 = Agent/（每个 agent 的日记在 Agent/<name>/diary/）
+const DAILY_NOTE_ROOT = process.env.AGENT_DIARY_ROOT_PATH ||
+    (process.env.PROJECT_BASE_PATH ? path.join(process.env.PROJECT_BASE_PATH, 'Agent') : path.join(__dirname, '..', '..', 'Agent'));
+
+// [Junior 协议] 公共知识库根目录 = knowledge/（"公共*" 目录在这里，不在 Agent/ 下）
+const PUBLIC_KNOWLEDGE_ROOT = process.env.KNOWLEDGEBASE_ROOT_PATH ||
+    (process.env.PROJECT_BASE_PATH ? path.join(process.env.PROJECT_BASE_PATH, 'knowledge') : path.join(__dirname, '..', '..', 'knowledge'));
 
 // 时间桶初始边界（天）— 设计规范
 const INITIAL_RECENT_DAYS = 7;      // 近期初始: 0~7天
@@ -136,32 +142,52 @@ class DreamWaveEngine {
     // =========================================================================
 
     /**
-     * 获取 agent 的种子日记本文件夹名列表（用于文件扫描）
-     * 包含: agentName 本身、包含 agentName 的文件夹、公共文件夹
+     * 获取 agent 的种子日记本目录列表（用于文件扫描）
+     * [Junior 协议] 从两个根扫描：Agent/（agent 专属）+ knowledge/（公共知识库）
+     * 返回：[{ name, absPath }]
      */
     _getSeedDiaryDirs(agentName) {
-        const names = [agentName];
+        const results = [];
+        const seen = new Set();
+        const addDir = (name, absPath) => {
+            if (seen.has(absPath)) return;
+            seen.add(absPath);
+            results.push({ name, absPath });
+        };
+
+        // 1) Agent/<agentName>/ — 该 agent 自己的目录（子目录 diary/knowledge 由后续递归处理）
+        addDir(agentName, path.join(DAILY_NOTE_ROOT, agentName));
+
+        // 2) Agent/ 下其他含 agentName 的目录（如 "DreamNova" 包含 "Nova"）
         try {
             const dirs = fsSync.readdirSync(DAILY_NOTE_ROOT, { withFileTypes: true });
             for (const dir of dirs) {
                 if (!dir.isDirectory()) continue;
                 if (dir.name.includes(agentName) && dir.name !== agentName) {
-                    names.push(dir.name);
-                }
-                if (dir.name.startsWith('公共')) {
-                    names.push(dir.name);
+                    addDir(dir.name, path.join(DAILY_NOTE_ROOT, dir.name));
                 }
             }
-        } catch (e) { /* 忽略 */ }
-        return Array.from(new Set(names));
+        } catch { /* Agent/ 不存在则跳过 */ }
+
+        // 3) [Junior 协议] 公共知识库目录在 knowledge/ 下（"公共*" 前缀）
+        try {
+            const publics = fsSync.readdirSync(PUBLIC_KNOWLEDGE_ROOT, { withFileTypes: true });
+            for (const dir of publics) {
+                if (!dir.isDirectory()) continue;
+                if (dir.name.startsWith('公共')) {
+                    addDir(dir.name, path.join(PUBLIC_KNOWLEDGE_ROOT, dir.name));
+                }
+            }
+        } catch { /* knowledge/ 不存在则跳过 */ }
+
+        return results;
     }
 
     /**
      * 获取 agent 可搜索的所有日记本索引名（用于向量召回）
      */
     _getSearchableIndexNames(agentName) {
-        // 与 _getSeedDiaryDirs 相同逻辑
-        return this._getSeedDiaryDirs(agentName);
+        return this._getSeedDiaryDirs(agentName).map(s => s.name);
     }
 
     // =========================================================================
@@ -179,8 +205,9 @@ class DreamWaveEngine {
      * 5. 放宽后深远起点跟着动: 中期放宽到120天 → 深远从121天开始
      */
     async _getTimelineBuckets(agentName) {
-        const seedDirs = this._getSeedDiaryDirs(agentName);
-        const targetDirs = seedDirs.map(name => path.join(DAILY_NOTE_ROOT, name));
+        // [Junior 协议] _getSeedDiaryDirs 现在返回 {name, absPath}，直接取绝对路径
+        const seeds = this._getSeedDiaryDirs(agentName);
+        const targetDirs = seeds.map(s => s.absPath);
         let allFiles = [];
 
         // 收集所有日记文件

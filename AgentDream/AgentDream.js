@@ -68,9 +68,10 @@ function initialize(config, dependencies) {
         console.error('[AgentDream] ❌ Failed to load dependencies:', e.message);
     }
 
-    // 计算 dailynote 路径
-    dailyNoteRootPath = process.env.KNOWLEDGEBASE_ROOT_PATH ||
-        (process.env.PROJECT_BASE_PATH ? path.join(process.env.PROJECT_BASE_PATH, 'dailynote') : path.join(__dirname, '..', '..', 'dailynote'));
+    // [Junior 协议] Agent 日记根目录：指向 Agent/ 下，每个 agent 的日记在 Agent/<name>/diary/
+    // 支持 AGENT_DIARY_ROOT_PATH 覆盖；兜底走 PROJECT_BASE_PATH 拼 Agent/
+    dailyNoteRootPath = process.env.AGENT_DIARY_ROOT_PATH ||
+        (process.env.PROJECT_BASE_PATH ? path.join(process.env.PROJECT_BASE_PATH, 'Agent') : path.join(__dirname, '..', '..', 'Agent'));
 
     // 注入 VCPInfo 广播
     if (dependencies && dependencies.vcpLogFunctions && typeof dependencies.vcpLogFunctions.pushVcpInfo === 'function') {
@@ -114,7 +115,10 @@ function shutdown() {
 }
 
 /**
- * 从 config.env 加载梦系统配置和 Agent 定义
+ * 加载梦系统配置和 Agent 定义
+ * [Junior 协议] 插件专属配置（DREAM_*）统一在本插件目录的 config.env 中维护，
+ *             避免污染根 config.env；向量模型 / API_KEY 等基础配置由根 config.env
+ *             注入 process.env，插件会自动继承（如 KnowledgeBaseManager 的依赖）。
  */
 function loadDreamConfig() {
     const configEnvPath = path.join(__dirname, 'config.env');
@@ -130,7 +134,7 @@ function loadDreamConfig() {
         }
     } else {
         if (DEBUG_MODE) console.error('[AgentDream] config.env not found, using defaults.');
-        console.warn('[AgentDream] ⚠️ config.env 未找到，梦系统处于休眠状态。请复制 config.env.example 为 config.env 以启用。');
+        console.warn('[AgentDream] ⚠️ 未找到插件目录 config.env，梦系统处于休眠状态。请复制 config.env.example 为 config.env 以启用。');
         return;
     }
 
