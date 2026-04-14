@@ -22,5 +22,17 @@
         "description": "包含所有主流平台（微博、知乎、B站等）实时热榜的综合信息。此占位符会周期性更新。"
       }
     ]
+  },
+  "dashboardCards": [
+    {
+      "id": "dailyhot-summary",
+      "title": "今日热榜",
+      "icon": "trending_up",
+      "source": "dashboard-card.html"
+    }
+  ],
+  "adminNav": {
+    "title": "每日热榜",
+    "icon": "trending_up"
   }
 }
