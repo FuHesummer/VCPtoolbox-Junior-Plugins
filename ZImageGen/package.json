@@ -1,0 +1,9 @@
+{
+  "name": "vcptoolbox-plugin-zimagegen",
+  "private": true,
+  "dependencies": {
+    "axios": "^1.6.0",
+    "https-proxy-agent": "^7.0.2",
+    "uuid": "^9.0.0"
+  }
+}

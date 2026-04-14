@@ -1,0 +1,7 @@
+{
+  "name": "vcptoolbox-plugin-zimageturbogen",
+  "private": true,
+  "dependencies": {
+    "uuid": "^9.0.0"
+  }
+}
