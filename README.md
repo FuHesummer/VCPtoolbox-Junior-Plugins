@@ -505,24 +505,34 @@ manifest 中声明数组，每项描述一张首页仪表盘卡片：
 | `source` | string | HTML 片段文件，**相对 `admin/` 目录** |
 | `width` | string | `"1x"` / `"2x"`（占 1 列或 2 列）|
 
-**加载方式**：AdminPanel 仪表盘扫描启用插件的 `dashboardCards` → 拉取 `admin/<source>` HTML 片段 → 内联嵌入仪表盘网格。片段里的 JS 跑在主页面 context，可直接调用 `/admin_api`。
+**加载方式**：AdminPanel 仪表盘扫描启用插件的 `dashboardCards` → 拉取 `admin/<source>` HTML 片段 → 内联嵌入仪表盘网格。片段里的 `<script>` 会被 AdminPanel 手动执行（Vue 版通过 `nextTick` 后重建 `<script>` 元素），可直接调用 `/admin_api`。
 
-**文件要求**：`source` 是 HTML 片段（不是完整 `<html>` 文档），写法参考：
+**⚠️ 片段格式硬性约束**（小卡片共享父页面 DOM，不是 iframe）：
 
 ```html
-<!-- Plugin/DailyHot/admin/dashboard-card.html 片段示例 -->
-<div class="card-content">
-  <h3 id="dh-title">加载中…</h3>
-  <ul id="dh-list"></ul>
+<!-- ✅ 正确：纯片段 + 内联 style + 主题变量 + IIFE 隔离 -->
+<div id="myplugin-card">
+  <p style="color:var(--secondary-text);font-size:0.85em;">加载中...</p>
 </div>
 <script>
-  (async () => {
-    const r = await fetch('/admin_api/plugins/DailyHot/status');
-    const data = await r.json();
-    // …渲染到片段内的 DOM
-  })();
+(function() {
+  fetch('/admin_api/plugins/MyPlugin/data').then(r => r.json()).then(data => {
+    document.getElementById('myplugin-card').innerHTML = renderItems(data);
+  });
+})();
 </script>
 ```
+
+**禁止**：
+- ❌ `<!DOCTYPE html>` / `<html>` / `<head>` / `<body>` — 会被当作节点名处理
+- ❌ 独立 `<style>` 含全局选择器（`body`, `*`, `.hot-item`）— 会污染整个面板
+- ❌ 把变量挂到 `window` — 多张卡片并存时冲突
+
+**推荐**：
+- ✅ 所有样式写成 inline `style="..."`，或用插件唯一前缀类名（如 `.dailyhot-xx`）
+- ✅ 颜色用 `var(--secondary-text)` / `var(--border-color)` 等主题变量，自动适配明暗主题
+- ✅ 所有元素 id 加插件前缀（如 `id="dailyhot-card-body"`）避免冲突
+- ✅ 用 IIFE `(function() { ... })()` 隔离脚本作用域
 
 #### adminNav — 侧边栏独立页面
 
@@ -544,60 +554,65 @@ manifest 声明 `adminNav` 对象，把插件的 `admin/index.html` 提升为 Ad
 
 **前提**：插件必须有 `admin/index.html`。
 
-**加载方式**：点击导航时拉取 `admin/index.html`，提取 `<body>` 内容 **内联**到一个 `<section>` 容器（**不用 iframe**）。因此：
-- 可以用主面板的 CSS 变量、字体、工具函数
-- 不受 iframe 尺寸约束（全屏显示）
-- JS 共享主页面 context，注意变量命名避免冲突
+**加载方式（iframe 沙箱隔离）**：侧边栏点击导航 → 主区域加载 `<iframe src="/admin_api/plugins/<name>/admin-page">`。iframe 与主面板**同源**（cookie 自动带，可直接调 `/admin_api/*`），但 DOM / CSS / JS 完全隔离，**插件页面的 body/html/全局样式不会污染主面板**。
 
-#### admin/index.html 两种渲染模式对比
+#### admin/index.html 渲染方式
 
-同一个 `admin/index.html` 根据 manifest 配置会被 AdminPanel 用两种方式加载：
+**Junior Vue 版 AdminPanel 统一使用 iframe 沙箱**：
 
-| 维度 | 弹窗模式（默认 / 回退） | 内联模式（`adminNav` 开启） |
-|------|------------------------|----------------------------|
-| 触发 | 未声明 `adminNav`，或用户关闭该开关 | 声明 `adminNav` 且用户开关启用 |
-| 入口 | "插件管理"卡片的"管理"按钮 | 侧边栏独立导航项 |
-| 渲染 | `<iframe src="/admin_api/plugins/<name>/admin-page">` | `fetch → 提取 <body> → 注入 <section>` |
-| DOM | 完全隔离 | 共享主面板 context |
-| 可用 API | 同源 fetch + postMessage | 主面板全部工具（`apiFetch`、`showMessage`、主面板的 CSS 变量）|
-| 尺寸 | 模态框约 80vw × 75vh | 全屏 section，不受限 |
-| 适用 | 独立工具 / 表单 / 编辑器 | 高嵌入度的管理页面 |
+| 维度 | adminNav 侧边栏页 | 插件管理弹窗（默认） |
+|------|------------------|---------------------|
+| 触发 | 声明了 `adminNav` 且用户开关启用 | 未声明 `adminNav` 或用户关闭该开关 |
+| 入口 | 侧边栏独立导航项 | "插件管理"卡片的"管理"按钮 |
+| 渲染 | `<iframe src="...">` 占满内容区 | `<iframe src="...">` 约 80vw × 75vh 模态框 |
+| DOM | ✅ 完全隔离 | ✅ 完全隔离 |
+| 可用 API | 同源 fetch + postMessage（与父通信）| 同左 |
+| 样式影响 | ❌ 不影响主面板 | ❌ 不影响主面板 |
+| 尺寸 | 全屏 section（最小 600px 高）| 模态框固定 |
+| 适用 | 高度集成的管理页、长列表、复杂工具 | 轻量表单、设置 |
 
-**兼容两种模式的写法**：
+> 💡 **历史背景**：旧 AdminPanel 的 adminNav 使用"内联模式"把插件 `<body>` 提取出来注入主面板 DOM，共享 CSS 变量但有全局样式污染风险（`body { background: #0f172a }` 会直接把整个面板染蓝）。Vue 版改为 iframe 统一沙箱，插件作者**不用再为内联兼容性妥协**，可以自由写完整 HTML 文档。
+
+**写 admin/index.html 时的自由度**（沙箱隔离下完全放飞）：
 
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <title>MyPlugin 管理页</title>
     <style>
-        /* 内联模式下样式会注入主页面，用唯一前缀避免全局污染 */
-        .my-plugin-root { /* ... */ }
-        .my-plugin-root .btn { /* ... */ }
+        /* ✅ 可以随便污染 body / * / 任意选择器，iframe 文档边界锁住了作用域 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0f172a; color: #f8fafc; padding: 16px; }
+        .hot-item:hover { background: rgba(255,255,255,0.04); }
     </style>
 </head>
 <body>
-    <!-- 内联模式只提取 body 内容，所以 DOM 都放这里 -->
-    <div class="my-plugin-root">
-        <!-- 内容 -->
-    </div>
+    <h2>MyPlugin 管理</h2>
+    <div id="content">加载中...</div>
     <script>
-        // 用 IIFE 隔离，避免全局变量冲突
-        (function() {
-            // 两种模式下相对路径 /admin_api 都能正常工作
-            fetch('/admin_api/plugins/MyPlugin/config-schema')
-                .then(r => r.json())
-                .then(data => { /* ... */ });
-        })();
+        // ✅ 可随意使用 window 全局变量，iframe 有独立 window
+        // ✅ fetch 同源，cookie 自动携带
+        fetch('/admin_api/plugins/MyPlugin/config-schema')
+            .then(r => r.json())
+            .then(data => { /* ... */ });
+
+        // ✅ 与父面板通信用 postMessage
+        window.parent.postMessage({ type: 'plugin-ready', name: 'MyPlugin' }, '*');
     </script>
 </body>
 </html>
 ```
 
-**常见坑**：
-- 不要 `window.myVar = ...`（内联模式下会污染主面板）
-- 不要 `document.body.innerHTML = ...`（内联模式下会清空整个面板）
-- 不要假设脚本在 iframe 里运行（用 try/catch 保护 DOM 操作）
+**与主面板主题适配**（可选）：
+
+iframe 隔离意味着主面板的 CSS 变量（`var(--border-color)` 等）无法跨 iframe。如果希望插件页面随主面板明暗主题切换：
+
+1. 父面板发送主题消息给 iframe：`iframe.contentWindow.postMessage({ type: 'theme', mode: 'dark' }, '*')`
+2. 插件页面监听 `message` 事件，动态切换自己的 CSS 类
+
+大多数插件直接固定自己的配色即可，无需处理。
 
 #### admin/ 目录约定
 

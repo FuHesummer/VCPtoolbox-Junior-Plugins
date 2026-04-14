@@ -5,6 +5,7 @@ const fsPromises = require('fs').promises;
 const path = require('path');
 const dotenv = require('dotenv');
 const axios = require('axios');
+const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 
 // --- State and Config Variables ---
@@ -964,12 +965,172 @@ function _saveDreamState() {
 // 模块导出
 // =========================================================================
 
+// =========================================================================
+// 面板 admin API 内部辅助函数
+// =========================================================================
+
+const DREAM_LOGS_DIR = path.join(__dirname, 'dream_logs');
+
+/** 校验文件名防止路径穿越 */
+function _safeDreamLogName(name) {
+    if (typeof name !== 'string') return null;
+    if (name.includes('..') || name.includes('/') || name.includes('\\')) return null;
+    if (!name.endsWith('.json')) return null;
+    return name;
+}
+
+/** 读单条梦日志（完整结构） */
+async function _readDreamLog(filename) {
+    const safe = _safeDreamLogName(filename);
+    if (!safe) throw new Error('Invalid log filename');
+    const content = await fsPromises.readFile(path.join(DREAM_LOGS_DIR, safe), 'utf-8');
+    return JSON.parse(content);
+}
+
+/** 写回梦日志 */
+async function _writeDreamLog(filename, data) {
+    const safe = _safeDreamLogName(filename);
+    if (!safe) throw new Error('Invalid log filename');
+    await fsPromises.writeFile(path.join(DREAM_LOGS_DIR, safe), JSON.stringify(data, null, 2), 'utf-8');
+}
+
+/** 列出所有梦日志，附带面板摘要信息 */
+async function _listDreamLogsWithSummary() {
+    try {
+        const files = await fsPromises.readdir(DREAM_LOGS_DIR);
+        const jsonFiles = files.filter(f => f.endsWith('.json')).sort().reverse();
+        const logs = await Promise.all(jsonFiles.map(async (f) => {
+            try {
+                const data = await _readDreamLog(f);
+                const operations = Array.isArray(data.operations) ? data.operations : [];
+                const pendingCount = operations.filter(op => op.status === 'pending_review').length;
+                return {
+                    filename: f,
+                    agentName: data.agentName || '未知',
+                    dreamId: data.dreamId || '',
+                    date: data.timestamp || '',
+                    operationCount: operations.length,
+                    pendingCount,
+                    hasPending: pendingCount > 0,
+                    preview: JSON.stringify(operations.slice(0, 2), null, 2).slice(0, 400),
+                };
+            } catch (e) {
+                return { filename: f, error: `Failed to parse: ${e.message}` };
+            }
+        }));
+        return logs;
+    } catch (e) {
+        if (e.code === 'ENOENT') return [];
+        throw e;
+    }
+}
+
+/**
+ * 对梦日志的操作批准/拒绝
+ * 当前实现：仅更新 JSON 里的 status 字段（不执行真实的日记合并/删除/写入）
+ * 真实执行可后续扩展（预留为 TODO）
+ */
+async function _setOperationStatus(filename, operationIdOrAll, nextStatus) {
+    const data = await _readDreamLog(filename);
+    if (!Array.isArray(data.operations)) {
+        throw new Error('No operations array in log file');
+    }
+    let matched = 0;
+    for (const op of data.operations) {
+        if (operationIdOrAll === 'all' || op.operationId === operationIdOrAll || op.id === operationIdOrAll) {
+            if (op.status === 'pending_review') {
+                op.status = nextStatus;
+                op.reviewedAt = new Date().toISOString();
+                matched++;
+            }
+        }
+    }
+    if (matched === 0 && operationIdOrAll !== 'all') {
+        throw new Error(`No pending operation matching '${operationIdOrAll}'`);
+    }
+    await _writeDreamLog(filename, data);
+    return { matched, total: data.operations.length };
+}
+
+/** 删除一个梦日志文件 */
+async function _deleteDreamLog(filename) {
+    const safe = _safeDreamLogName(filename);
+    if (!safe) throw new Error('Invalid log filename');
+    await fsPromises.unlink(path.join(DREAM_LOGS_DIR, safe));
+}
+
+// =========================================================================
+// 🔌 面板 admin 路由（通过 pluginAdminRouter 协议暴露）
+// 主项目挂载点：/admin_api/plugins/AgentDream/api/*
+// 协议详见 VCPtoolbox-Junior/Plugin.js:getPluginAdminRouter()
+// =========================================================================
+
+const pluginAdminRouter = express.Router();
+pluginAdminRouter.use(express.json({ limit: '2mb' }));
+
+// GET /dream-logs — 列出所有梦日志（含摘要）
+pluginAdminRouter.get('/dream-logs', async (req, res) => {
+    try {
+        const logs = await _listDreamLogsWithSummary();
+        res.json(logs); // 保持与原 admin/index.html 契约：返回数组
+    } catch (e) {
+        console.error('[AgentDream:AdminAPI] list failed:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// GET /dream-logs/:filename — 获取单条梦日志完整内容
+pluginAdminRouter.get('/dream-logs/:filename', async (req, res) => {
+    try {
+        const data = await _readDreamLog(req.params.filename);
+        res.json({ success: true, data });
+    } catch (e) {
+        if (e.code === 'ENOENT') return res.status(404).json({ success: false, error: 'Not found' });
+        res.status(400).json({ success: false, error: e.message });
+    }
+});
+
+// POST /dream-logs/:filename/operations/:opId — 批准/拒绝操作
+// body: { action: 'approve' | 'reject' }
+// opId 可以是操作 id，或 'all' 表示批量
+pluginAdminRouter.post('/dream-logs/:filename/operations/:opId', async (req, res) => {
+    try {
+        const { action } = req.body || {};
+        if (action !== 'approve' && action !== 'reject') {
+            return res.status(400).json({ success: false, error: 'action must be "approve" or "reject"' });
+        }
+        const nextStatus = action === 'approve' ? 'approved' : 'rejected';
+        const result = await _setOperationStatus(req.params.filename, req.params.opId, nextStatus);
+        res.json({ success: true, ...result, action });
+    } catch (e) {
+        if (e.code === 'ENOENT') return res.status(404).json({ success: false, error: 'Log file not found' });
+        res.status(400).json({ success: false, error: e.message });
+    }
+});
+
+// DELETE /dream-logs/:filename — 删除梦日志
+pluginAdminRouter.delete('/dream-logs/:filename', async (req, res) => {
+    try {
+        await _deleteDreamLog(req.params.filename);
+        res.json({ success: true });
+    } catch (e) {
+        if (e.code === 'ENOENT') return res.status(404).json({ success: false, error: 'Not found' });
+        res.status(400).json({ success: false, error: e.message });
+    }
+});
+
+// =========================================================================
+// 模块导出
+// =========================================================================
+
 module.exports = {
     initialize,
     shutdown,
     processToolCall,
     // 暴露给外部调度系统使用
     triggerDream,
+    // 🔌 面板 admin API 路由（协议：registerAdminRoutes via module.exports.pluginAdminRouter）
+    pluginAdminRouter,
     // 二期面板接口预留
     getDreamConfig: () => ({ ...DREAM_CONFIG }),
     getDreamAgents: () => ({ ...DREAM_AGENTS }),
@@ -995,13 +1156,9 @@ module.exports = {
             return [];
         }
     },
-    // 二期: 审批操作
-    approveDreamOperation: async (logFileName, operationId) => {
-        // 预留接口 - 二期实现
-        return { status: 'not_implemented', message: '梦操作审批功能将在二期面板中实现。' };
-    },
-    rejectDreamOperation: async (logFileName, operationId) => {
-        // 预留接口 - 二期实现
-        return { status: 'not_implemented', message: '梦操作拒绝功能将在二期面板中实现。' };
-    }
+    // 审批操作（仅修改 JSON 状态，真实执行待后续）
+    approveDreamOperation: async (logFileName, operationId) =>
+        _setOperationStatus(logFileName, operationId || 'all', 'approved'),
+    rejectDreamOperation: async (logFileName, operationId) =>
+        _setOperationStatus(logFileName, operationId || 'all', 'rejected'),
 };

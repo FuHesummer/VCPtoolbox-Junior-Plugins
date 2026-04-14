@@ -15,6 +15,13 @@
     "timeout": 10000
   },
   "capabilities": {
+    "tvsVariables": [
+      {
+        "key": "VarForum",
+        "file": "tvs/ToolForum.txt",
+        "description": "VCP 论坛工具使用指南（AI 发帖/回帖/读帖的提示词）"
+      }
+    ],
     "invocationCommands": [
       {
         "commandIdentifier": "CreatePost",

@@ -21,6 +21,13 @@
     }
   },
   "capabilities": {
+    "tvsVariables": [
+      {
+        "key": "VarMIDITranslator",
+        "file": "tvs/MIDITranslator.txt",
+        "description": "MIDI 翻译器工具使用指南（AI 解析/生成 MIDI 文件与 DSL 的提示词）"
+      }
+    ],
     "invocationCommands": [
       {
         "commandIdentifier": "list_midi_files",

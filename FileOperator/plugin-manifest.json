@@ -13,6 +13,15 @@
   "communication": {
     "protocol": "stdio"
   },
+  "capabilities": {
+    "tvsVariables": [
+      {
+        "key": "VarFileTool",
+        "file": "tvs/filetool.txt",
+        "description": "VCP 服务器文件操作工具使用指南（AI 对受限目录做读写/移动/提取的提示词）"
+      }
+    ]
+  },
   "configSchema": {
     "ALLOWED_DIRECTORIES": {
       "type": "string",

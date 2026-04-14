@@ -26,7 +26,20 @@
         "DREAM_CONTEXT_TTL_HOURS": "integer",
         "DREAM_AGENT_LIST": "string"
     },
+    "adminNav": {
+        "title": "梦境审批",
+        "icon": "bedtime",
+        "type": "native",
+        "entry": "panel.js"
+    },
     "capabilities": {
+        "tvsVariables": [
+            {
+                "key": "VarDreamTool",
+                "file": "tvs/dreamtool.txt",
+                "description": "AI 做梦系统工具使用指南（安装后自动注入 {{VarDreamTool}} 占位符）"
+            }
+        ],
         "invocationCommands": [
             {
                 "command": "DiaryMerge",
