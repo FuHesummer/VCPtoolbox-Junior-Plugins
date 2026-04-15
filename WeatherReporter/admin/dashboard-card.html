@@ -1,0 +1,119 @@
+<div id="weather-card-body">
+  <p style="color:var(--secondary-text);font-size:0.88em;">加载中...</p>
+</div>
+<script>
+(function() {
+  const body = document.getElementById('weather-card-body');
+  const WEEKDAYS = ['日','一','二','三','四','五','六'];
+
+  function fmtDate(s) {
+    if (!s) return '';
+    const parts = String(s).split('-');
+    return parts.length >= 3 ? (parts[1] + '/' + parts[2]) : s;
+  }
+  function weekdayShort(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    return WEEKDAYS[d.getDay()];
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function renderHint(msg) {
+    body.innerHTML = '<p style="color:var(--secondary-text);font-size:0.82em;line-height:1.6;">'
+      + esc(msg)
+      + '<br>请在 <code style="background:var(--background-color);padding:1px 5px;border-radius:3px;color:var(--primary-text);">config.env</code> 里配置 '
+      + '<code style="background:var(--background-color);padding:1px 5px;border-radius:3px;color:var(--primary-text);">VarCity</code> / '
+      + '<code style="background:var(--background-color);padding:1px 5px;border-radius:3px;color:var(--primary-text);">WeatherKey</code> / '
+      + '<code style="background:var(--background-color);padding:1px 5px;border-radius:3px;color:var(--primary-text);">WeatherUrl</code>'
+      + '，下次 cron 更新后会自动显示。</p>';
+  }
+
+  fetch('/admin_api/plugins/WeatherReporter/admin-assets/weather-data.json', { credentials: 'same-origin' })
+    .then(r => {
+      if (r.status === 404) throw { code: 'NO_CACHE' };
+      if (!r.ok) throw { code: 'HTTP_' + r.status };
+      return r.json();
+    })
+    .then(data => {
+      const hourly = Array.isArray(data.hourly) ? data.hourly : [];
+      const daily = Array.isArray(data.daily) ? data.daily : [];
+      const warning = Array.isArray(data.warning) ? data.warning : [];
+      const aq = data.airQuality || {};
+      const now = hourly[0] || {};
+      const today = daily[0] || {};
+
+      const tempNow = (now.temp !== undefined && now.temp !== null) ? now.temp : (today.tempMax || '--');
+      const text = now.text || today.textDay || '--';
+      const wind = now.windDir ? (esc(now.windDir) + (now.windScale ? ' ' + esc(now.windScale) + '级' : '')) : '';
+      const humidity = now.humidity ? (esc(now.humidity) + '%') : '';
+      const aqi = (aq.aqi !== undefined && aq.aqi !== null) ? (esc(aq.aqi) + (aq.category ? ' · ' + esc(aq.category) : '')) : '';
+
+      let html = '';
+
+      // 预警横幅
+      if (warning.length > 0) {
+        const w = warning[0];
+        html += '<div style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);padding:6px 10px;border-radius:6px;margin-bottom:10px;font-size:0.78em;color:#d97706;">'
+          + '⚠ ' + esc(w.typeName || w.title || '预警') + (w.severity ? ' · ' + esc(w.severity) : '')
+          + '</div>';
+      }
+
+      // 主温度
+      html += '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">'
+        + '<span style="font-size:2.2em;font-weight:300;color:var(--primary-text);line-height:1;">' + esc(tempNow) + '°</span>'
+        + '<span style="font-size:0.95em;color:var(--secondary-text);">' + esc(text) + '</span>'
+        + '</div>';
+
+      // 统计行
+      const stats = [];
+      if (humidity) stats.push('💧 ' + humidity);
+      if (wind) stats.push('🌬 ' + wind);
+      if (aqi) stats.push('🌫 AQI ' + aqi);
+      if (stats.length > 0) {
+        html += '<div style="display:flex;gap:12px;margin-top:6px;font-size:0.76em;color:var(--secondary-text);flex-wrap:wrap;">'
+          + stats.map(s => '<span>' + s + '</span>').join('')
+          + '</div>';
+      }
+
+      // 未来 3 日
+      const next3 = daily.slice(1, 4);
+      if (next3.length > 0) {
+        html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;">';
+        for (const d of next3) {
+          html += '<div style="text-align:center;padding:6px 4px;background:var(--background-color);border-radius:6px;font-size:0.72em;">'
+            + '<div style="color:var(--secondary-text);">' + esc(fmtDate(d.fxDate)) + ' 周' + esc(weekdayShort(d.fxDate)) + '</div>'
+            + '<div style="color:var(--primary-text);margin-top:2px;">' + esc(d.textDay || '--') + '</div>'
+            + '<div style="color:var(--primary-text);font-weight:500;margin-top:2px;">' + esc(d.tempMin) + '~' + esc(d.tempMax) + '°</div>'
+            + '</div>';
+        }
+        html += '</div>';
+      }
+
+      // 最后更新时间
+      if (data.lastUpdate) {
+        const updated = new Date(data.lastUpdate);
+        if (!isNaN(updated.getTime())) {
+          const diff = Date.now() - updated.getTime();
+          const mins = Math.round(diff / 60000);
+          let ago;
+          if (mins < 1) ago = '刚刚';
+          else if (mins < 60) ago = mins + ' 分钟前';
+          else if (mins < 1440) ago = Math.round(mins / 60) + ' 小时前';
+          else ago = Math.round(mins / 1440) + ' 天前';
+          html += '<div style="margin-top:8px;font-size:0.7em;color:var(--secondary-text);opacity:0.7;text-align:right;">更新于 ' + esc(ago) + '</div>';
+        }
+      }
+
+      body.innerHTML = html;
+    })
+    .catch(err => {
+      if (err && err.code === 'NO_CACHE') {
+        renderHint('天气缓存尚未生成。');
+      } else {
+        renderHint('加载失败（' + (err && err.code ? err.code : String(err)) + '）。');
+      }
+    });
+})();
+</script>

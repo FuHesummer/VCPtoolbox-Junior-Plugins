@@ -13,7 +13,8 @@ dotenv.config({ path: path.join(__dirname, 'config.env') });
 const DEFAULT_TIMEZONE = process.env.DEFAULT_TIMEZONE || 'Asia/Shanghai';
 
 const CACHE_FILE_PATH = path.join(__dirname, 'weather_cache.txt');
-const JSON_CACHE_FILE_PATH = path.join(__dirname, 'weather_cache.json');
+// JSON 缓存改到 admin/ 下，便于仪表盘卡片通过 /admin_api/plugins/*/admin-assets/* 读取
+const JSON_CACHE_FILE_PATH = path.join(__dirname, 'admin', 'weather-data.json');
 const CITY_CACHE_FILE_PATH = path.join(__dirname, 'city_cache.txt');
 
 // --- Start QWeather API Functions ---
@@ -690,6 +691,7 @@ async function fetchAndCacheWeather() {
       lastUpdate: new Date().toISOString(),
     };
     try {
+      await fs.mkdir(path.dirname(JSON_CACHE_FILE_PATH), { recursive: true });
       await fs.writeFile(JSON_CACHE_FILE_PATH, JSON.stringify(rawWeatherData, null, 2), 'utf-8');
       console.error(`[WeatherReporter] Successfully cached raw weather JSON to ${JSON_CACHE_FILE_PATH}.`);
     } catch (jsonWriteError) {

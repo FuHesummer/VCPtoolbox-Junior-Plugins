@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const fsPromises = require('fs').promises;
 const schedule = require('node-schedule');
+const express = require('express');
 const ForumEngine = require('./lib/forum-engine');
 
 const DATA_FILE = path.join(__dirname, 'task-center-data.json');
@@ -756,6 +757,127 @@ async function processToolCall(args) {
     }
 }
 
+// broadcastStatusUpdate：历史遗留 WebSocket 推送钩子，暂无订阅者
+// 未来可接入主项目 WebSocket 服务做实时状态同步
+function broadcastStatusUpdate() {
+    logDebug('status-update (no subscribers)');
+}
+
+// ============================================================
+// Junior 插件 admin 协议 v2.0：管理面板后端 API
+// 前端通过 /admin_api/plugins/VCPTaskAssistant/api/* 访问
+// ============================================================
+const pluginAdminRouter = (() => {
+    const router = express.Router();
+    router.use(express.json({ limit: '2mb' }));
+
+    // 配置 + 运行时状态（一次性拿全量，前端单次渲染用）
+    router.get('/config', (req, res) => {
+        try {
+            res.json({
+                success: true,
+                globalEnabled: taskCenterData.globalEnabled,
+                settings: taskCenterData.settings,
+                tasks: taskCenterData.tasks,
+                history: (taskCenterData.history || []).slice(-50).reverse(),
+                activeTimerCount: activeTimers.size,
+                availableTaskTypes: getAvailableTaskTypes(),
+                dataFile: path.relative(process.cwd(), DATA_FILE)
+            });
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
+        }
+    });
+
+    router.get('/status', (req, res) => {
+        try {
+            res.json({ success: true, ...getStatus() });
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
+        }
+    });
+
+    // 手动触发（忽略全局开关 + task.enabled，manual 语义就是强制跑一次）
+    router.post('/trigger/:taskId', async (req, res) => {
+        try {
+            const result = await triggerTask(req.params.taskId);
+            res.json({ success: true, ...result });
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
+        }
+    });
+
+    // 单任务 enabled 切换 + 立即重建调度
+    router.post('/toggle/:taskId', async (req, res) => {
+        try {
+            const task = getTaskById(req.params.taskId);
+            if (!task) {
+                return res.status(404).json({ success: false, error: '任务不存在' });
+            }
+            task.enabled = !task.enabled;
+            task.meta.updatedAt = new Date().toISOString();
+            await rebuildScheduler();
+            res.json({ success: true, enabled: task.enabled, nextRunTime: task.runtime.nextRunTime });
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
+        }
+    });
+
+    // 全局开关切换（关了所有任务都不跑）
+    router.post('/toggle-global', async (req, res) => {
+        try {
+            taskCenterData.globalEnabled = !taskCenterData.globalEnabled;
+            await rebuildScheduler();
+            res.json({ success: true, globalEnabled: taskCenterData.globalEnabled });
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
+        }
+    });
+
+    // 获取空白任务模板（前端新建时预填默认值）
+    router.get('/task-template/:type', (req, res) => {
+        try {
+            const type = req.params.type === 'custom_prompt' ? 'custom_prompt' : 'forum_patrol';
+            res.json({ success: true, template: getTaskTemplate(type) });
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
+        }
+    });
+
+    // 创建任务
+    router.post('/task', async (req, res) => {
+        try {
+            const task = await createTask(req.body || {});
+            res.json({ success: true, task });
+        } catch (e) {
+            res.status(400).json({ success: false, error: e.message });
+        }
+    });
+
+    // 更新任务（整体替换，前端传完整对象）
+    router.put('/task/:taskId', async (req, res) => {
+        try {
+            const task = await updateTask(req.params.taskId, req.body || {});
+            res.json({ success: true, task });
+        } catch (e) {
+            const code = /不存在/.test(e.message) ? 404 : 400;
+            res.status(code).json({ success: false, error: e.message });
+        }
+    });
+
+    // 删除任务
+    router.delete('/task/:taskId', async (req, res) => {
+        try {
+            const removed = await deleteTask(req.params.taskId);
+            res.json({ success: true, removed });
+        } catch (e) {
+            res.status(404).json({ success: false, error: e.message });
+        }
+    });
+
+    return router;
+})();
+
 module.exports = {
     initialize,
     shutdown,
@@ -766,5 +888,6 @@ module.exports = {
     createTask,
     updateTask,
     deleteTask,
-    triggerTask
+    triggerTask,
+    pluginAdminRouter
 };

@@ -376,7 +376,10 @@
   };
 
   // ===== 样式（复用主面板 CSS 变量；紧凑风格对齐主面板其他页面） =====
-  if (!document.getElementById('dream-page-styles')) {
+  // style 每次覆盖（黄金规则 3：不 idempotent skip，否则改版后看不到新 CSS）
+  {
+    const __oldStyle = document.getElementById('dream-page-styles');
+    if (__oldStyle) __oldStyle.remove();
     const s = document.createElement('style');
     s.id = 'dream-page-styles';
     s.textContent = `

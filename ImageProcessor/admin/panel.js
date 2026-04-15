@@ -8,8 +8,11 @@
   const { pluginApi, showToast, formatTime } = P;
   const api = pluginApi('ImageProcessor');
 
+  // style 每次覆盖（黄金规则 3：不 idempotent skip，否则改版后看不到新 CSS）
   const styleId = 'image-processor-style';
-  if (!document.getElementById(styleId)) {
+  {
+    const __oldStyle = document.getElementById(styleId);
+    if (__oldStyle) __oldStyle.remove();
     const el = document.createElement('style');
     el.id = styleId;
     el.textContent = `

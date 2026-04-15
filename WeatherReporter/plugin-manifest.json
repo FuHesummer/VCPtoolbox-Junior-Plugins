@@ -11,13 +11,7 @@
     "command": "node weather-reporter.js"
   },
   "communication": {
-    "protocol": "stdio" 
-  },
-  "adminNav": {
-    "title": "天气预报",
-    "icon": "partly_cloudy_day",
-    "type": "native",
-    "entry": "panel.js"
+    "protocol": "stdio"
   },
   "capabilities": {
     "systemPromptPlaceholders": [
@@ -28,6 +22,14 @@
     ],
     "invocationCommands": []
   },
+  "dashboardCards": [
+    {
+      "id": "weather-summary",
+      "title": "天气",
+      "icon": "partly_cloudy_day",
+      "source": "dashboard-card.html"
+    }
+  ],
   "configSchema": {
     "VarCity": "string",
     "WeatherKey": "string",
