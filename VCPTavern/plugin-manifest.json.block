@@ -1,0 +1,25 @@
+{
+  "manifestVersion": "1.0.0",
+  "name": "VCPTavern",
+  "displayName": "VCPTavern 预设管理",
+  "version": "1.0.0",
+  "description": "消息预处理器：在 system prompt 里识别 {{VCPTavern::预设名}} 占位符，替换为对应的预设内容。支持在管理面板编辑 JSON 预设。",
+  "author": "VCPToolBox",
+  "pluginType": "messagePreprocessor",
+  "entryPoint": {
+    "script": "VCPTavern.js"
+  },
+  "communication": {
+    "protocol": "direct"
+  },
+  "adminNav": {
+    "title": "Tavern 预设",
+    "icon": "local_bar",
+    "type": "native",
+    "entry": "panel.js"
+  },
+  "configSchema": {
+    "DebugMode": "boolean"
+  },
+  "capabilities": {}
+}

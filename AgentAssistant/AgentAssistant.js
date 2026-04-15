@@ -4,6 +4,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
+const express = require('express');
 
 // --- State and Config Variables ---
 let VCP_SERVER_PORT;
@@ -893,9 +894,85 @@ async function sendDelegationCallback(delegationId, status, report, agentName) {
     }
 }
 
+// Junior 插件 admin 协议 v2.0：管理面板后端 API
+// 前端通过 /admin_api/plugins/AgentAssistant/api/* 访问
+const pluginAdminRouter = (() => {
+    const router = express.Router();
+    router.use(express.json({ limit: '4mb' }));
+    const CONFIG_PATH = path.join(__dirname, 'config.json');
+
+    function readConfig() {
+        if (!fs.existsSync(CONFIG_PATH)) {
+            return {
+                maxHistoryRounds: 7,
+                contextTtlHours: 24,
+                delegationMaxRounds: 15,
+                delegationTimeout: 300000,
+                globalSystemPrompt: '',
+                delegationSystemPrompt: '',
+                delegationHeartbeatPrompt: '',
+                agents: [],
+            };
+        }
+        const raw = fs.readFileSync(CONFIG_PATH, 'utf-8');
+        const data = JSON.parse(raw);
+        return {
+            maxHistoryRounds: Number(data.maxHistoryRounds ?? 7),
+            contextTtlHours: Number(data.contextTtlHours ?? 24),
+            delegationMaxRounds: Number(data.delegationMaxRounds ?? 15),
+            delegationTimeout: Number(data.delegationTimeout ?? 300000),
+            globalSystemPrompt: String(data.globalSystemPrompt ?? ''),
+            delegationSystemPrompt: String(data.delegationSystemPrompt ?? ''),
+            delegationHeartbeatPrompt: String(data.delegationHeartbeatPrompt ?? ''),
+            agents: Array.isArray(data.agents) ? data.agents : [],
+        };
+    }
+
+    router.get('/config', (req, res) => {
+        try {
+            res.json({ success: true, config: readConfig() });
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
+        }
+    });
+
+    router.post('/config', (req, res) => {
+        try {
+            const body = req.body || {};
+            const normalized = {
+                maxHistoryRounds: Number(body.maxHistoryRounds ?? 7),
+                contextTtlHours: Number(body.contextTtlHours ?? 24),
+                delegationMaxRounds: Number(body.delegationMaxRounds ?? 15),
+                delegationTimeout: Number(body.delegationTimeout ?? 300000),
+                globalSystemPrompt: String(body.globalSystemPrompt ?? ''),
+                delegationSystemPrompt: String(body.delegationSystemPrompt ?? ''),
+                delegationHeartbeatPrompt: String(body.delegationHeartbeatPrompt ?? ''),
+                agents: Array.isArray(body.agents) ? body.agents.map(a => ({
+                    baseName: String(a.baseName || '').trim(),
+                    chineseName: String(a.chineseName || '').trim(),
+                    modelId: String(a.modelId || '').trim(),
+                    systemPrompt: String(a.systemPrompt || ''),
+                    description: String(a.description || ''),
+                    maxOutputTokens: Number(a.maxOutputTokens ?? 40000),
+                    temperature: Number(a.temperature ?? 0.7),
+                })) : [],
+            };
+            fs.writeFileSync(CONFIG_PATH, JSON.stringify(normalized, null, 2), 'utf-8');
+            // 热重载：刷新内存中的 AGENTS 映射
+            try { loadAgentsFromLocalConfig(); } catch (e) { console.warn('[AgentAssistant] reload after save failed:', e.message); }
+            res.json({ success: true, config: normalized });
+        } catch (e) {
+            res.status(500).json({ success: false, error: e.message });
+        }
+    });
+
+    return router;
+})();
+
 module.exports = {
     initialize,
     shutdown,
     processToolCall,
-    reloadConfig: loadAgentsFromLocalConfig
+    reloadConfig: loadAgentsFromLocalConfig,
+    pluginAdminRouter,
 };

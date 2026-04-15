@@ -3,6 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
 const Database = require('better-sqlite3');
+const express = require('express');
 
 let db = null;
 let pluginConfig = {}; 
@@ -232,5 +233,93 @@ module.exports = {
             db.close();
             console.log('[MultiModalProcessor] SQLite connection closed.');
         }
-    }
+    },
+
+    // Junior 插件 admin 协议 v2.0：暴露 Express.Router，主项目通过 /admin_api/plugins/ImageProcessor/api/* 动态转发
+    pluginAdminRouter: (() => {
+        const router = express.Router();
+        router.use(express.json({ limit: '4mb' }));
+
+        // GET /multimodal-cache?page=1&pageSize=20&search=...
+        router.get('/multimodal-cache', (req, res) => {
+            if (!db) return res.status(503).json({ success: false, error: '数据库未初始化，插件可能未启用' });
+            try {
+                const page = Math.max(1, parseInt(req.query.page) || 1);
+                const pageSize = Math.min(Math.max(1, parseInt(req.query.pageSize) || 20), 100);
+                const search = (req.query.search || '').trim();
+                const offset = (page - 1) * pageSize;
+                const where = search ? 'WHERE description LIKE ?' : '';
+                const params = search ? [`%${search}%`] : [];
+
+                const total = db.prepare(`SELECT COUNT(*) AS c FROM multimodal_cache ${where}`).get(...params).c;
+                const rows = db.prepare(
+                    `SELECT hash, description, mime_type, timestamp, SUBSTR(base64, 1, 400) AS base64_preview
+                     FROM multimodal_cache ${where}
+                     ORDER BY timestamp DESC
+                     LIMIT ? OFFSET ?`
+                ).all(...params, pageSize, offset);
+
+                res.json({
+                    success: true,
+                    total,
+                    page,
+                    pageSize,
+                    items: rows.map(r => ({
+                        hash: r.hash,
+                        description: r.description,
+                        mimeType: r.mime_type,
+                        timestamp: r.timestamp,
+                        base64Preview: r.base64_preview,
+                    })),
+                });
+            } catch (e) {
+                res.status(500).json({ success: false, error: e.message });
+            }
+        });
+
+        // GET /multimodal-cache/:hash — 读单条完整 base64（用于预览）
+        router.get('/multimodal-cache/:hash', (req, res) => {
+            if (!db) return res.status(503).json({ success: false, error: '数据库未初始化' });
+            try {
+                const row = db.prepare('SELECT hash, base64, description, mime_type, timestamp FROM multimodal_cache WHERE hash = ?').get(req.params.hash);
+                if (!row) return res.status(404).json({ success: false, error: 'not found' });
+                res.json({
+                    success: true,
+                    item: {
+                        hash: row.hash,
+                        base64: row.base64,
+                        description: row.description,
+                        mimeType: row.mime_type,
+                        timestamp: row.timestamp,
+                    },
+                });
+            } catch (e) {
+                res.status(500).json({ success: false, error: e.message });
+            }
+        });
+
+        // DELETE /multimodal-cache/:hash
+        router.delete('/multimodal-cache/:hash', (req, res) => {
+            if (!db) return res.status(503).json({ success: false, error: '数据库未初始化' });
+            try {
+                const info = db.prepare('DELETE FROM multimodal_cache WHERE hash = ?').run(req.params.hash);
+                res.json({ success: true, deleted: info.changes });
+            } catch (e) {
+                res.status(500).json({ success: false, error: e.message });
+            }
+        });
+
+        // POST /multimodal-cache/clear — 清空整个缓存
+        router.post('/multimodal-cache/clear', (req, res) => {
+            if (!db) return res.status(503).json({ success: false, error: '数据库未初始化' });
+            try {
+                const info = db.prepare('DELETE FROM multimodal_cache').run();
+                res.json({ success: true, deleted: info.changes });
+            } catch (e) {
+                res.status(500).json({ success: false, error: e.message });
+            }
+        });
+
+        return router;
+    })(),
 };

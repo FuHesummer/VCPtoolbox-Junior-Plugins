@@ -12,5 +12,11 @@
   "communication": {
     "protocol": "direct"
   },
+  "adminNav": {
+    "title": "任务派发",
+    "icon": "schedule",
+    "type": "native",
+    "entry": "panel.js"
+  },
   "capabilities": {}
 }

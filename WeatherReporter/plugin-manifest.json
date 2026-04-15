@@ -13,6 +13,12 @@
   "communication": {
     "protocol": "stdio" 
   },
+  "adminNav": {
+    "title": "天气预报",
+    "icon": "partly_cloudy_day",
+    "type": "native",
+    "entry": "panel.js"
+  },
   "capabilities": {
     "systemPromptPlaceholders": [
       {
@@ -20,7 +26,7 @@
         "description": "当前的实时天气信息。"
       }
     ],
-    "invocationCommands": [] 
+    "invocationCommands": []
   },
   "configSchema": {
     "VarCity": "string",

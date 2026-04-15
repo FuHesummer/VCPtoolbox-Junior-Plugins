@@ -1,0 +1,33 @@
+{
+  "manifestVersion": "1.0.0",
+  "name": "ImageProcessor",
+  "displayName": "多模态缓存处理器",
+  "version": "1.0.0",
+  "description": "消息预处理器：将消息中的图片/音视频 base64 转译为文字描述并缓存到 SQLite，避免重复调用多模态 LLM。通过 {{VCP_MULTIMODAL_INFO}} 标记注入原文。",
+  "author": "VCPToolBox",
+  "pluginType": "messagePreprocessor",
+  "entryPoint": {
+    "script": "image-processor.js"
+  },
+  "communication": {
+    "protocol": "direct"
+  },
+  "adminNav": {
+    "title": "多模态缓存",
+    "icon": "imagesmode",
+    "type": "native",
+    "entry": "panel.js"
+  },
+  "configSchema": {
+    "DebugMode": "boolean",
+    "API_Key": "string",
+    "API_URL": "string",
+    "MultiModalModel": "string",
+    "MultiModalPrompt": "string",
+    "MultiModalModelOutputMaxTokens": "integer",
+    "MultiModalModelThinkingBudget": "integer",
+    "MultiModalModelAsynchronousLimit": "integer",
+    "MediaInsertPrompt": "string"
+  },
+  "capabilities": {}
+}

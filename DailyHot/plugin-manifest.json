@@ -33,6 +33,8 @@
   ],
   "adminNav": {
     "title": "每日热榜",
-    "icon": "trending_up"
+    "icon": "trending_up",
+    "type": "native",
+    "entry": "panel.js"
   }
 }

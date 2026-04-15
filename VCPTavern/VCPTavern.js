@@ -422,7 +422,9 @@ class VCPTavern {
     }
 
     // 作为 service 插件的核心方法
-    registerRoutes(app, adminApiRouter, config, projectBasePath) {
+    // Junior 插件 admin 协议 v2.0：创建 Express.Router 供 /admin_api/plugins/VCPTavern/api/* 动态转发
+    // 原 registerRoutes(老协议) 仍保留以兼容其他宿主
+    _createAdminRouter() {
         const router = express.Router();
         router.use(express.json({ limit: '10mb' }));
 
@@ -478,10 +480,14 @@ class VCPTavern {
             }
         });
 
-        // 将路由挂载到传入的 adminApiRouter 上
-        adminApiRouter.use('/vcptavern', router);
+        return router;
+    }
 
-        if (this.debugMode) console.log('[VCPTavern] API 路由已通过 adminApiRouter 注册到 /vcptavern');
+    // 老协议兼容：registerRoutes(app, adminApiRouter, ...) 挂到 /admin_api/vcptavern（保留用于非 Junior 宿主）
+    registerRoutes(app, adminApiRouter, config, projectBasePath) {
+        const router = this._createAdminRouter();
+        adminApiRouter.use('/vcptavern', router);
+        if (this.debugMode) console.log('[VCPTavern] API 路由已通过 adminApiRouter 注册到 /vcptavern（老协议）');
     }
 
     async shutdown() {
@@ -491,10 +497,21 @@ class VCPTavern {
 
 const vcPTavernInstance = new VCPTavern();
 
+// Junior 插件 admin 协议 v2.0：lazy 创建 pluginAdminRouter（访问 this.presets 等需要实例化后）
+let _pluginAdminRouter = null;
+function getPluginAdminRouter() {
+    if (!_pluginAdminRouter) {
+        _pluginAdminRouter = vcPTavernInstance._createAdminRouter();
+    }
+    return _pluginAdminRouter;
+}
+
 // 使得插件能被 Plugin.js 正确加载和初始化
 module.exports = {
     initialize: (config) => vcPTavernInstance.initialize(config),
     processMessages: (messages, config) => vcPTavernInstance.processMessages(messages, config),
     registerRoutes: (app, adminApiRouter, config, projectBasePath) => vcPTavernInstance.registerRoutes(app, adminApiRouter, config, projectBasePath),
     shutdown: () => vcPTavernInstance.shutdown(),
+    // Junior 新协议：Plugin.js 首次调用 getPluginAdminRouter(name) 时通过此 getter 取路由
+    get pluginAdminRouter() { return getPluginAdminRouter(); },
 };

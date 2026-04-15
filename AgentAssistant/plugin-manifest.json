@@ -16,6 +16,12 @@
     "enabled": true,
     "messageType": "plugin_callback_notification"
   },
+  "adminNav": {
+    "title": "Agent 通讯",
+    "icon": "hub",
+    "type": "native",
+    "entry": "panel.js"
+  },
   "configSchema": {
     "AGENT_ASSISTANT_MAX_HISTORY_ROUNDS": "integer",
     "AGENT_ASSISTANT_CONTEXT_TTL_HOURS": "integer"
