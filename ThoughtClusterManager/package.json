@@ -1,0 +1,7 @@
+{
+  "name": "vcp-thought-cluster-manager",
+  "version": "1.0.0",
+  "description": "VCPtoolbox-Junior 思维簇管理工具（AI 调用）",
+  "main": "ThoughtClusterManager.js",
+  "private": true
+}

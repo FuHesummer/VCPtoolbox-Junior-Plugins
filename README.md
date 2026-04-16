@@ -114,7 +114,16 @@ cp -r plugins-repo/EmojiListGenerator /path/to/VCPtoolbox-Junior/Plugin/
 | TarotDivination | synchronous | 塔罗牌占卜 |
 | JapaneseHelper | synchronous | 日语学习助手（语法解析/句型识别） |
 | EmojiListGenerator | static | 表情包列表生成器 |
-| ThoughtClusterManager | synchronous | 思维链文件管理（元自学习） |
+
+### 记忆系统辅助（🟢 Junior 本体核心同步版）
+
+> 这三个插件同时作为 Junior 本体核心（`Plugin/`），这里提供独立分发副本，方便其他项目引用。
+
+| 插件 | 类型 | 说明 |
+|------|------|------|
+| ThoughtClusterManager | synchronous | AI 思维簇创建与编辑（元自学习能力），2 命令：CreateClusterFile / EditClusterFile |
+| SemanticGroupEditor | synchronous | AI 语义词元组查询与批量更新（RAG 知识库辅助），2 命令：QueryGroups / UpdateGroups |
+| DailyNoteEditor | synchronous | AI 日记精准编辑工具（覆盖 / 查找替换 / 删除单条日记），3 命令：EditDailyNote / FindReplaceInNote / DeleteDailyNote |
 
 ### 系统服务
 

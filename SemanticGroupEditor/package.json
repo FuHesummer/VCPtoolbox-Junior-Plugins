@@ -1,0 +1,7 @@
+{
+  "name": "vcp-semantic-group-editor",
+  "version": "1.0.0",
+  "description": "VCPtoolbox-Junior 语义词元组编辑工具（AI 调用）",
+  "main": "SemanticGroupEditor.js",
+  "private": true
+}
