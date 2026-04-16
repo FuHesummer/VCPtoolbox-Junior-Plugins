@@ -1,0 +1,1389 @@
+{
+  "$schema": "./docs/placeholder-registry-schema.json",
+  "version": "1.0.0",
+  "generatedAt": "2026-04-16T12:05:11.342Z",
+  "generator": "scripts/build-placeholder-registry.js",
+  "description": "VCPtoolbox-Junior-Plugins 占位符注册表 — AdminPanel PromptEditor 查询此文件识别未装插件提供的占位符，给用户友好提示「此变量来自 XXX 插件」+ 一键安装",
+  "stats": {
+    "pluginCount": 65,
+    "placeholderCount": 71,
+    "patternRuleCount": 2,
+    "totalScannedDirs": 75
+  },
+  "plugins": {
+    "1PanelInfoProvider": {
+      "displayName": "1Panel 信息提供器",
+      "description": "从1Panel服务器获取Dashboard基础信息和操作系统信息，并通过独立的系统提示词占位符提供这些数据。",
+      "pluginType": "static",
+      "category": "data-provider",
+      "icon": "database",
+      "directoryName": "1PanelInfoProvider",
+      "version": "1.0.0",
+      "disabledByDefault": true,
+      "placeholders": [
+        {
+          "name": "1PanelDashboard",
+          "kind": "static-placeholder",
+          "description": "实时的1Panel仪表盘基础信息 (来自API)。",
+          "source": "manifest.systemPromptPlaceholders"
+        },
+        {
+          "name": "1PanelOsInfo",
+          "kind": "static-placeholder",
+          "description": "实时的1Panel操作系统信息 (来自API)。",
+          "source": "manifest.systemPromptPlaceholders"
+        }
+      ]
+    },
+    "AgentAssistant": {
+      "displayName": "女仆团协作插件",
+      "description": "允许莱恩先生或其主AI调用家中配置的专属女仆Agent，进行专业领域咨询与高效协作。支持即时通讯、定时发送的“未来电话”、异步委托模式，以及通过 inject_tools 为单次通讯临时注入工具组。注入工具会被拼接到 system 尾部并明确标注为临时工具组，不影响 Agent 的长期固定系统提示词。",
+      "pluginType": "hybridservice",
+      "category": "service",
+      "icon": "cloud_sync",
+      "directoryName": "AgentAssistant",
+      "version": "2.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPAgentAssistant",
+          "kind": "tool-description",
+          "description": "女仆团协作插件 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "AgentDream": {
+      "displayName": "梦系统插件",
+      "description": "Agent梦境系统。让AI回顾记忆、进行联想式沉浸梦境、整理记忆。梦中的所有操作（日记合并、删除、梦感悟）会被记录为可审核的JSON索引，供管理员在后台面板审批。支持串语法批量操作。",
+      "pluginType": "hybridservice",
+      "category": "service",
+      "icon": "cloud_sync",
+      "directoryName": "AgentDream",
+      "version": "1.0.0",
+      "disabledByDefault": true,
+      "placeholders": [
+        {
+          "name": "VCPAgentDream",
+          "kind": "tool-description",
+          "description": "梦系统插件 的工具调用描述（3 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 3,
+          "commands": [
+            "DiaryMerge",
+            "DiaryDelete",
+            "DreamInsight"
+          ]
+        },
+        {
+          "name": "VarDreamTool",
+          "kind": "tvs-variable",
+          "description": "AI 做梦系统工具使用指南（安装后自动注入 {{VarDreamTool}} 占位符）",
+          "source": "manifest.tvsVariables",
+          "tvsFile": "tvs/dreamtool.txt"
+        }
+      ]
+    },
+    "AgentMessage": {
+      "displayName": "代理消息推送插件",
+      "description": "允许AI通过WebSocket向用户前端发送格式化消息。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "AgentMessage",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPAgentMessage",
+          "kind": "tool-description",
+          "description": "代理消息推送插件 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "ArxivDailyPapers": {
+      "displayName": "ArxivDailyPapers",
+      "description": "Fetches daily research papers from the Arxiv API and provides them as a placeholder.",
+      "pluginType": "static",
+      "category": "data-provider",
+      "icon": "database",
+      "directoryName": "ArxivDailyPapers",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "ArxivDailyPapersData",
+          "kind": "static-placeholder",
+          "description": "Daily research papers from Arxiv, updated every 30 minutes.",
+          "source": "manifest.systemPromptPlaceholders"
+        }
+      ]
+    },
+    "BilibiliFetch": {
+      "displayName": "Bilibili 内容获取插件",
+      "description": "Bilibili 视频内容获取插件。支持视频信息抓取（字幕/弹幕/评论/高能进度条/快照截图/HD高清抽帧）、关键词搜索（视频/UP主）、UP主投稿列表获取。支持长链接、b23.tv短链接和多P分P视频。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "BilibiliFetch",
+      "version": "2.1.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPBilibiliFetch",
+          "kind": "tool-description",
+          "description": "Bilibili 内容获取插件 的工具调用描述（3 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 3,
+          "commands": []
+        }
+      ]
+    },
+    "ChromeBridge": {
+      "displayName": "Chrome 浏览器桥接器",
+      "description": "混合插件：既能让AI实时观察Chrome页面内容（Service模式），又能执行浏览器控制命令并等待页面刷新（Direct模式）。",
+      "pluginType": "hybridservice",
+      "category": "service",
+      "icon": "cloud_sync",
+      "directoryName": "ChromeBridge",
+      "version": "2.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPChromePageInfo",
+          "kind": "static-placeholder",
+          "description": "提供当前Chrome浏览器活动标签页的实时、简化版内容，以Markdown格式呈现，包含可交互的元素。",
+          "source": "manifest.systemPromptPlaceholders"
+        },
+        {
+          "name": "VCPChromeBridge",
+          "kind": "tool-description",
+          "description": "Chrome 浏览器桥接器 的工具调用描述（3 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 3,
+          "commands": [
+            "type",
+            "click",
+            "open_url"
+          ]
+        }
+      ]
+    },
+    "ComfyCloudGen": {
+      "displayName": "Comfy Cloud 云端图像/视频生成",
+      "description": "通过Comfy Cloud云端GPU生成图像或视频。数据驱动架构，自动匹配模型生态，支持895+云端模型。三种模式：auto(默认)、template、raw。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "ComfyCloudGen",
+      "version": "0.4.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPComfyCloudGen",
+          "kind": "tool-description",
+          "description": "Comfy Cloud 云端图像/视频生成 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "ComfyUIGen": {
+      "displayName": "ComfyUI 图像生成器",
+      "description": "通过 ComfyUI API 使用自定义工作流生成高质量图像。支持LoRA模型自动管理、质量增强词配置、多种工作流模板。已深度集成到 VCP ToolBox，提供可视化配置界面。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "ComfyUIGen",
+      "version": "0.3.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPComfyUIGen",
+          "kind": "tool-description",
+          "description": "ComfyUI 图像生成器 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "DailyHot": {
+      "displayName": "每日热榜",
+      "description": "在后台周期性地获取所有主流平台的今日热榜信息，并通过占位符 {{VCPDailyHot}} 提供。",
+      "pluginType": "static",
+      "category": "data-provider",
+      "icon": "database",
+      "directoryName": "DailyHot",
+      "version": "2.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPDailyHot",
+          "kind": "static-placeholder",
+          "description": "包含所有主流平台（微博、知乎、B站等）实时热榜的综合信息。此占位符会周期性更新。",
+          "source": "manifest.systemPromptPlaceholders"
+        }
+      ]
+    },
+    "DailyNoteEditor": {
+      "displayName": "日记编辑工具",
+      "description": "AI 可调用的日记编辑工具：覆盖写入、查找替换、删除单条日记文件。与 DailyNoteManager（批处理）互补，DailyNoteEditor 面向对单个文件的精准操作。",
+      "pluginType": "synchronous",
+      "category": "tool",
+      "icon": "extension",
+      "directoryName": "DailyNoteEditor",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPDailyNoteEditor",
+          "kind": "tool-description",
+          "description": "日记编辑工具 的工具调用描述（3 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 3,
+          "commands": []
+        }
+      ]
+    },
+    "DeepWikiVCP": {
+      "displayName": "DeepWiki 抓取器",
+      "description": "一个同步插件，用于抓取 deepwiki.com 的内容并将其转换为 Markdown 格式。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "DeepWikiVCP",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPDeepWikiVCP",
+          "kind": "tool-description",
+          "description": "DeepWiki 抓取器 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "DMXDoubaoGen": {
+      "displayName": "Doubao 风格图片生成器",
+      "description": "通过 DMXAPI 使用其提供的模型（如 doubao-seedream-4-0-250828）生成和编辑图片。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "DMXDoubaoGen",
+      "version": "0.2.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPDMXDoubaoGen",
+          "kind": "tool-description",
+          "description": "Doubao 风格图片生成器 的工具调用描述（3 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 3,
+          "commands": []
+        }
+      ]
+    },
+    "DoubaoGen": {
+      "displayName": "火山引擎图像生成器",
+      "description": "基于火山引擎 API 的图像生成插件，支持文生图、图生图、多图融合、组图生成，以及动态模型发现。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "DoubaoGen",
+      "version": "2.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPDoubaoGen",
+          "kind": "tool-description",
+          "description": "火山引擎图像生成器 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "ServerFileOperator": {
+      "displayName": "VCP服务器文件操作器",
+      "description": "VCP服务器专用的一个强大的文件系统操作插件，允许AI对受限目录进行读、写、列出、移动、复制、删除等多种文件和目录操作。特别增强了文件读取能力，可自动提取PDF、Word(.docx)和表格(.xlsx, .csv)文件的纯文本内容。",
+      "pluginType": "synchronous",
+      "category": "system-integration",
+      "icon": "terminal",
+      "directoryName": "FileOperator",
+      "version": "1.0.1",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPServerFileOperator",
+          "kind": "tool-description",
+          "description": "VCP服务器文件操作器 的工具调用描述（19 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 19,
+          "commands": [
+            "ListAllowedDirectories",
+            "ReadFile",
+            "WebReadFile",
+            "WriteFile",
+            "WriteEscapedFile"
+          ]
+        },
+        {
+          "name": "VarFileTool",
+          "kind": "tvs-variable",
+          "description": "VCP 服务器文件操作工具使用指南（AI 对受限目录做读写/移动/提取的提示词）",
+          "source": "manifest.tvsVariables",
+          "tvsFile": "tvs/filetool.txt"
+        }
+      ]
+    },
+    "FlashDeepSearch": {
+      "displayName": "闪电深度研究插件",
+      "description": "一个强大的深度研究插件，能够围绕一个主题进行多维度、跨领域的关键词扩展，并综合搜索结果生成研究报告。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "FlashDeepSearch",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPFlashDeepSearch",
+          "kind": "tool-description",
+          "description": "闪电深度研究插件 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "FRPSInfoProvider": {
+      "displayName": "FRPS 设备信息提供器",
+      "description": "定期从FRPS服务器获取所有类型的代理设备信息，并整合成一个文本文件供占位符使用。",
+      "pluginType": "static",
+      "category": "data-provider",
+      "icon": "database",
+      "directoryName": "FRPSInfoProvider",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "FRPSAllProxyInfo",
+          "kind": "static-placeholder",
+          "description": "所有类型FRPS代理的实时设备信息汇总文本 (TCP, UDP, HTTP, HTTPS, TCPMUX, STCP, SUDP)。",
+          "source": "manifest.systemPromptPlaceholders"
+        }
+      ]
+    },
+    "GeminiImageGen": {
+      "displayName": "Gemini 图像生成与编辑",
+      "description": "使用 Google Gemini Flash Preview 模型进行高级的图像生成和编辑。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "GeminiImageGen",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPGeminiImageGen",
+          "kind": "tool-description",
+          "description": "Gemini 图像生成与编辑 的工具调用描述（2 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 2,
+          "commands": []
+        }
+      ]
+    },
+    "GoogleSearch": {
+      "displayName": "谷歌搜索 (API版)",
+      "description": "一个使用Google Custom Search API进行搜索的同步插件。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "GoogleSearch",
+      "version": "2.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPGoogleSearch",
+          "kind": "tool-description",
+          "description": "谷歌搜索 (API版) 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "GrokVideoGen": {
+      "displayName": "Grok 视频生成器",
+      "description": "使用 Grok API 进行视频生成（支持文生视频、图生视频、视频续写、视频拼接）。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "GrokVideo",
+      "version": "1.3.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPGrokVideoGen",
+          "kind": "tool-description",
+          "description": "Grok 视频生成器 的工具调用描述（2 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 2,
+          "commands": [
+            "submit",
+            "concat"
+          ]
+        }
+      ]
+    },
+    "IMAPIndex": {
+      "displayName": "IMAP 邮件本地索引插件",
+      "description": "静态插件：定期通过 IMAP 拉取白名单匹配邮件到本地（.eml -> .md 转换），合并生成索引文本并输出到 stdout，供占位符注入系统提示词使用。仅邮件链路支持 HTTP(S) CONNECT 代理（可选）。",
+      "pluginType": "static",
+      "category": "data-provider",
+      "icon": "database",
+      "directoryName": "IMAPIndex",
+      "version": "1.0.0",
+      "disabledByDefault": true,
+      "placeholders": [
+        {
+          "name": "IMAPIndex",
+          "kind": "static-placeholder",
+          "description": "包含所有本地存储邮件（Markdown）的整合索引文本。插件运行时会输出该索引的完整内容；VCP 主服务可按计划刷新以更新占位符内容。",
+          "source": "manifest.systemPromptPlaceholders"
+        }
+      ]
+    },
+    "IMAPSearch": {
+      "displayName": "IMAP 邮件本地搜索",
+      "description": "一个同步 VCP 插件，用于在 IMAPIndex 插件生成的本地邮件存储中执行全文搜索。它支持分页和可配置的索引目录。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "IMAPSearch",
+      "version": "1.1.0",
+      "disabledByDefault": true,
+      "placeholders": [
+        {
+          "name": "VCPIMAPSearch",
+          "kind": "tool-description",
+          "description": "IMAP 邮件本地搜索 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "JapaneseHelper": {
+      "displayName": "日语学习助手",
+      "description": "日语学习增强插件（纯Python基础层 + optional增强层）。支持深度语法解析、动态句型识别（含部分活用补偿）、错题本分析推荐、复习调度、汉字查询、资源状态检查、JLPT统计（jlpt_stats）与可选 OJAD 声调接口。结构化接口支持 Lookup/KanjiInfo/JLPTCheck/ReadingAid/ParseTree/SchemaProbe。SemanticEnhance 默认使用 rule 风格判定，已修复礼貌体被误判为 mixed 的问题；SyntaxEnhance 默认 heuristic，可选 GiNZA 增强；ReadingEnhance 支持可选 romaji 后端。已补齐 SentenceSplit/ReadingEnhance/SyntaxEnhance/SemanticEnhance/TeachingAssetsStatus 五项分层命令。Romanize/Furigana 已修复促音拆裂与活用显示问题；已完成全命令回归与重复旧函数清理。",
+      "pluginType": "synchronous",
+      "category": "utility",
+      "icon": "build",
+      "directoryName": "JapaneseHelper",
+      "version": "2.14.2",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPJapaneseHelper",
+          "kind": "tool-description",
+          "description": "日语学习助手 的工具调用描述（11 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 11,
+          "commands": []
+        }
+      ]
+    },
+    "KEGGSearch": {
+      "displayName": "KEGG 数据库查询",
+      "description": "一个用于查询 KEGG 数据库的 VCP 插件，提供通路、基因、化合物等多维度的数据检索与分析功能。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "KEGGSearch",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPKEGGSearch",
+          "kind": "tool-description",
+          "description": "KEGG 数据库查询 的工具调用描述（32 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 32,
+          "commands": []
+        }
+      ]
+    },
+    "LinuxLogMonitor": {
+      "displayName": "Linux 日志监控器",
+      "description": "事件驱动的 Linux 日志监控系统。v1.3.0 新增：可配置去重策略、主动查询命令(searchLog/lastErrors/logStats)、异常上下文增强(before/after)。与 LinuxShellExecutor 共享 SSHManager 模块。",
+      "pluginType": "asynchronous",
+      "category": "tool",
+      "icon": "extension",
+      "directoryName": "LinuxLogMonitor",
+      "version": "1.3.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPLinuxLogMonitor",
+          "kind": "tool-description",
+          "description": "Linux 日志监控器 的工具调用描述（8 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 8,
+          "commands": []
+        }
+      ]
+    },
+    "LinuxShellExecutor": {
+      "displayName": "Linux Shell 安全执行器",
+      "description": "六层安全防护的 Linux Shell 命令执行器。支持多发行版静默安装、异步任务托管、交互阻塞探测及跨插件联动监控。",
+      "pluginType": "synchronous",
+      "category": "system-integration",
+      "icon": "terminal",
+      "directoryName": "LinuxShellExecutor",
+      "version": "1.2.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPLinuxShellExecutor",
+          "kind": "tool-description",
+          "description": "Linux Shell 安全执行器 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "MagiAgent": {
+      "displayName": "Magi三贤者会议系统",
+      "description": "一个模拟EVA三贤人系统的混合插件，可以召开Magi会议讨论复杂问题，并支持异步查询。",
+      "pluginType": "hybridservice",
+      "category": "service",
+      "icon": "cloud_sync",
+      "directoryName": "MagiAgent",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPMagiAgent",
+          "kind": "tool-description",
+          "description": "Magi三贤者会议系统 的工具调用描述（2 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 2,
+          "commands": []
+        }
+      ]
+    },
+    "MCPO": {
+      "displayName": "MCPO 工具桥接器",
+      "description": "基于 mcpo 的 MCP 工具桥接插件，能够自动发现、缓存和调用 MCP 工具，支持多种 MCP 服务器类型。",
+      "pluginType": "synchronous",
+      "category": "tool",
+      "icon": "extension",
+      "directoryName": "MCPO",
+      "version": "1.0.0",
+      "disabledByDefault": true,
+      "placeholders": [
+        {
+          "name": "VCPMCPO",
+          "kind": "tool-description",
+          "description": "MCPO 工具桥接器 的工具调用描述（7 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 7,
+          "commands": []
+        }
+      ]
+    },
+    "MCPOMonitor": {
+      "displayName": "MCPO 服务状态监控器",
+      "description": "监控 MCPO 服务器状态并提供所有可用 MCP 工具的详细信息，通过 {{MCPOServiceStatus}} 占位符集成到系统提示词中。",
+      "pluginType": "static",
+      "category": "data-provider",
+      "icon": "database",
+      "directoryName": "MCPOMonitor",
+      "version": "1.0.0",
+      "disabledByDefault": true,
+      "placeholders": [
+        {
+          "name": "MCPOServiceStatus",
+          "kind": "static-placeholder",
+          "description": "MCPO 服务器的详细状态信息与所有可用工具的完整使用说明。",
+          "source": "manifest.systemPromptPlaceholders"
+        }
+      ]
+    },
+    "MIDITranslator": {
+      "displayName": "MIDI翻译器",
+      "description": "一个高性能的MIDI文件解析与生成插件，可以从midi-input目录读取MIDI文件并解析为DSL格式，也可以从DSL生成MIDI文件到midi-output目录。核心引擎由Rust编写，确保性能与安全。提供DSL语法验证、事件提取和双向转换测试等功能。",
+      "pluginType": "hybridservice",
+      "category": "service",
+      "icon": "cloud_sync",
+      "directoryName": "MIDITranslator",
+      "version": "0.3.0",
+      "disabledByDefault": true,
+      "placeholders": [
+        {
+          "name": "VCPMIDITranslator",
+          "kind": "tool-description",
+          "description": "MIDI翻译器 的工具调用描述（7 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 7,
+          "commands": []
+        },
+        {
+          "name": "VarMIDITranslator",
+          "kind": "tvs-variable",
+          "description": "MIDI 翻译器工具使用指南（AI 解析/生成 MIDI 文件与 DSL 的提示词）",
+          "source": "manifest.tvsVariables",
+          "tvsFile": "tvs/MIDITranslator.txt"
+        }
+      ]
+    },
+    "NCBIDatasets": {
+      "displayName": "NCBI Datasets 查询插件",
+      "description": "提供对 NCBI Datasets v2 API 的封装能力，用于检索基因组、基因与物种信息等。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "NCBIDatasets",
+      "version": "0.2.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPNCBIDatasets",
+          "kind": "tool-description",
+          "description": "NCBI Datasets 查询插件 的工具调用描述（22 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 22,
+          "commands": []
+        }
+      ]
+    },
+    "NovelAIGen": {
+      "displayName": "NovelAI 图片生成器",
+      "description": "通过 NovelAI API 使用 NovelAI Diffusion 模型生成高质量的动漫风格图片。支持多种模型和参数调节。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "NovelAIGen",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPNovelAIGen",
+          "kind": "tool-description",
+          "description": "NovelAI 图片生成器 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "PaperReader": {
+      "displayName": "超文本递归阅读器",
+      "description": "Rust stdio closeout build of PaperReader. Supports legacy VCP commands (`IngestPDF`, `Read`, `ReadSkeleton`, `ReadDeep`, `Query`) and the canonical runtime contract for document ingest/read, evidence tracing, collection synthesis, workspace state, artifact inspection, and research graph orchestration.",
+      "pluginType": "synchronous",
+      "category": "tool",
+      "icon": "extension",
+      "directoryName": "PaperReader",
+      "version": "0.6.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPPaperReader",
+          "kind": "tool-description",
+          "description": "超文本递归阅读器 的工具调用描述（31 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 31,
+          "commands": []
+        }
+      ]
+    },
+    "ServerPowerShellExecutor": {
+      "displayName": "PowerShell命令执行器",
+      "description": "一个允许AI执行PowerShell命令并返回其输出的插件。支持阻塞式和后台式执行并捕获输出结果。",
+      "pluginType": "synchronous",
+      "category": "system-integration",
+      "icon": "terminal",
+      "directoryName": "PowerShellExecutor",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPServerPowerShellExecutor",
+          "kind": "tool-description",
+          "description": "PowerShell命令执行器 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "ProjectAnalyst": {
+      "displayName": "项目分析器",
+      "description": "分析指定的项目文件夹，生成详细的分析报告，并支持后续查询分析结果。",
+      "pluginType": "synchronous",
+      "category": "tool",
+      "icon": "extension",
+      "directoryName": "ProjectAnalyst",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPProjectAnalyst",
+          "kind": "tool-description",
+          "description": "项目分析器 的工具调用描述（3 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 3,
+          "commands": []
+        }
+      ]
+    },
+    "PubMedSearch": {
+      "displayName": "PubMed 文献检索插件",
+      "description": "提供基于 NCBI E-utilities 和 PMC 的 PubMed 文献检索、详情获取、引用/相似文献分析与标识符转换等能力。实现参考 PubMed-MCP-Server 原始实现，保持结果结构和语义尽量一致，便于从 MCP 平滑迁移。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "PubMedSearch",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPPubMedSearch",
+          "kind": "tool-description",
+          "description": "PubMed 文献检索插件 的工具调用描述（16 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 16,
+          "commands": []
+        }
+      ]
+    },
+    "PyCameraCapture": {
+      "displayName": "Python摄像头插件",
+      "description": "一个使用Python和OpenCV从摄像头捕获图像的同步插件。",
+      "pluginType": "synchronous",
+      "category": "browser",
+      "icon": "web",
+      "directoryName": "PyCameraCapture",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPPyCameraCapture",
+          "kind": "tool-description",
+          "description": "Python摄像头插件 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "PyScreenshot": {
+      "displayName": "Python截图插件",
+      "description": "一个使用Python和Pillow从桌面截取屏幕图像的同步插件。",
+      "pluginType": "synchronous",
+      "category": "data-source",
+      "icon": "rss_feed",
+      "directoryName": "PyScreenshot",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPPyScreenshot",
+          "kind": "tool-description",
+          "description": "Python截图插件 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "Randomness": {
+      "displayName": "随机事件生成器",
+      "description": "一个多功能后端插件，用于生成各种可信的随机事件。支持无状态的单次随机事件（如抽牌、掷骰）和有状态的、可持久化的牌堆管理（创建、抽取、重置、销毁），适用于需要连续操作的场景。",
+      "pluginType": "synchronous",
+      "category": "utility",
+      "icon": "build",
+      "directoryName": "Randomness",
+      "version": "5.2.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPRandomness",
+          "kind": "tool-description",
+          "description": "随机事件生成器 的工具调用描述（12 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 12,
+          "commands": []
+        }
+      ]
+    },
+    "ScheduleBriefing": {
+      "displayName": "用户日程简报",
+      "description": "每小时自动清理过期日程，并提取下一个日程供AI参考。",
+      "pluginType": "static",
+      "category": "data-provider",
+      "icon": "database",
+      "directoryName": "ScheduleBriefing",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPNextSchedule",
+          "kind": "static-placeholder",
+          "description": "显示用户的下一个日程安排。",
+          "source": "manifest.systemPromptPlaceholders"
+        }
+      ]
+    },
+    "ScheduleManager": {
+      "displayName": "用户日程管理器",
+      "description": "用于维护用户的日程，允许AI查看、添加和删除用户日程。",
+      "pluginType": "synchronous",
+      "category": "tool",
+      "icon": "extension",
+      "directoryName": "ScheduleManager",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPScheduleManager",
+          "kind": "tool-description",
+          "description": "用户日程管理器 的工具调用描述（3 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 3,
+          "commands": []
+        }
+      ]
+    },
+    "SciCalculator": {
+      "displayName": "科学计算器",
+      "description": "执行数学表达式计算。AI应使用特定格式请求此工具。",
+      "pluginType": "synchronous",
+      "category": "utility",
+      "icon": "build",
+      "directoryName": "SciCalculator",
+      "version": "1.1.1",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPSciCalculator",
+          "kind": "tool-description",
+          "description": "科学计算器 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "SemanticGroupEditor": {
+      "displayName": "语义组编辑器",
+      "description": "一个用于查询和更新RAG知识库中语义词元组的插件。",
+      "pluginType": "synchronous",
+      "category": "tool",
+      "icon": "extension",
+      "directoryName": "SemanticGroupEditor",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPSemanticGroupEditor",
+          "kind": "tool-description",
+          "description": "语义组编辑器 的工具调用描述（2 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 2,
+          "commands": []
+        }
+      ]
+    },
+    "SerpSearch": {
+      "displayName": "Serp API 搜索引擎",
+      "description": "一个使用SerpApi提供多种搜索引擎（如Bing, DuckDuckGo, Google Scholar）的插件。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "SerpSearch",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPSerpSearch",
+          "kind": "tool-description",
+          "description": "Serp API 搜索引擎 的工具调用描述（4 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 4,
+          "commands": [
+            "bing_search",
+            "duckduckgo_search",
+            "google_scholar_search",
+            "google_search"
+          ]
+        }
+      ]
+    },
+    "SnowBridge": {
+      "displayName": "Snow 工具桥接器",
+      "description": "为 Snow CLI 导出 VCP 原生工具，提供工具清单同步、远程执行与取消控制。",
+      "pluginType": "hybridservice",
+      "category": "service",
+      "icon": "cloud_sync",
+      "directoryName": "SnowBridge",
+      "version": "2.1.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPSnowBridge",
+          "kind": "tool-description",
+          "description": "Snow 工具桥接器 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": [
+            "GetStatus"
+          ]
+        }
+      ]
+    },
+    "SunoGen": {
+      "displayName": "Suno AI 音乐生成",
+      "description": "使用 Suno API 生成原创歌曲。支持通过歌词、风格、标题进行自定义创作，或通过描述获取灵感创作，还可以继续生成已有的歌曲片段。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "SunoGen",
+      "version": "0.1.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPSunoGen",
+          "kind": "tool-description",
+          "description": "Suno AI 音乐生成 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": [
+            "generate_song"
+          ]
+        }
+      ]
+    },
+    "TagFolder": {
+      "displayName": "标签折叠器",
+      "description": "读取 list.md 中的标签白名单，生成折叠行为指令注入系统提示词，实现对 nvim 系列标签包裹内容的上下文折叠管理。",
+      "pluginType": "static",
+      "category": "data-provider",
+      "icon": "database",
+      "directoryName": "TagFolder",
+      "version": "1.0.0",
+      "disabledByDefault": true,
+      "placeholders": [
+        {
+          "name": "VCPTagFolder",
+          "kind": "static-placeholder",
+          "description": "基于 list.md 白名单生成的上下文折叠指令，告知模型如何处理 nvim 系列标签包裹的内容块。",
+          "source": "manifest.systemPromptPlaceholders"
+        }
+      ]
+    },
+    "TarotDivination": {
+      "displayName": "塔罗占卜",
+      "description": "一个融合天文、环境与内在起源的塔罗牌占卜插件，支持多种牌阵与起源选择。",
+      "pluginType": "synchronous",
+      "category": "utility",
+      "icon": "build",
+      "directoryName": "TarotDivination",
+      "version": "2.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPTarotDivination",
+          "kind": "tool-description",
+          "description": "塔罗占卜 的工具调用描述（4 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 4,
+          "commands": []
+        }
+      ]
+    },
+    "TavilySearch": {
+      "displayName": "Tavily 搜索插件",
+      "description": "使用 Tavily API 进行高级网络搜索。AI可以指定搜索查询、主题、最大结果数，并可选择包含原始内容、图片链接及描述，以及设定搜索时间范围。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "TavilySearch",
+      "version": "0.1.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPTavilySearch",
+          "kind": "tool-description",
+          "description": "Tavily 搜索插件 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "ServerTencentCOSBackup": {
+      "displayName": "腾讯云COS备份插件",
+      "description": "一个功能完整的腾讯云对象存储（COS）插件，支持文件上传、下载、复制、移动、删除和列出操作，具有权限控制和自动压缩功能。动态读取config.env中的AGENT_FOLDERS_CONFIG，带有对AGENT_FOLDERS_CONFIG中子文件夹权限的文字描述。",
+      "pluginType": "synchronous",
+      "category": "system-integration",
+      "icon": "terminal",
+      "directoryName": "TencentCOSBackup",
+      "version": "1.1.1",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPServerTencentCOSBackup",
+          "kind": "tool-description",
+          "description": "腾讯云COS备份插件 的工具调用描述（10 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 10,
+          "commands": []
+        }
+      ]
+    },
+    "ThoughtClusterManager": {
+      "displayName": "思维簇管理器",
+      "description": "一个用于创建和编辑AI自身思维链文件的插件，实现元自学习能力。",
+      "pluginType": "synchronous",
+      "category": "tool",
+      "icon": "extension",
+      "directoryName": "ThoughtClusterManager",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPThoughtClusterManager",
+          "kind": "tool-description",
+          "description": "思维簇管理器 的工具调用描述（2 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 2,
+          "commands": []
+        }
+      ]
+    },
+    "UrlFetch": {
+      "displayName": "URL 内容获取插件",
+      "description": "通用 URL 内容获取插件。支持：1. 'text' (默认): 返回解析后的网页文本或链接列表。 2. 'snapshot': 返回网页的完整长截图。 3. 'image': 直接下载网络图片并返回 Base64（URL 为图片时自动启用）。 4. 'file:///' 本地路径: 读取本地文本文件或图片。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "UrlFetch",
+      "version": "0.2.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPUrlFetch",
+          "kind": "tool-description",
+          "description": "URL 内容获取插件 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "ServerSearchController": {
+      "displayName": "本地文件秒搜 (Everything)",
+      "description": "通过调用 Everything 命令行工具 (es.exe) 在本地计算机上实现毫秒级文件搜索。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "VCPEverything",
+      "version": "1.1.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPServerSearchController",
+          "kind": "tool-description",
+          "description": "本地文件秒搜 (Everything) 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": [
+            "search"
+          ]
+        }
+      ]
+    },
+    "VCPForum": {
+      "displayName": "VCP论坛插件",
+      "description": "用于在VCP论坛中创建新帖子和回复现有帖子的同步插件。",
+      "pluginType": "synchronous",
+      "category": "social",
+      "icon": "forum",
+      "directoryName": "VCPForum",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPVCPForum",
+          "kind": "tool-description",
+          "description": "VCP论坛插件 的工具调用描述（4 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 4,
+          "commands": []
+        },
+        {
+          "name": "VarForum",
+          "kind": "tvs-variable",
+          "description": "VCP 论坛工具使用指南（AI 发帖/回帖/读帖的提示词）",
+          "source": "manifest.tvsVariables",
+          "tvsFile": "tvs/ToolForum.txt"
+        }
+      ]
+    },
+    "ForumLister": {
+      "displayName": "VCP论坛帖子列表生成器",
+      "description": "一个静态插件，定期扫描论坛目录并生成一个热门帖子列表（按最后修改时间排序）。",
+      "pluginType": "static",
+      "category": "data-provider",
+      "icon": "database",
+      "directoryName": "VCPForumLister",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPForumLister",
+          "kind": "static-placeholder",
+          "description": "一个由VCPForumLister插件动态生成的VCP论坛热门帖子列表。所有帖子都位于'../../dailynote/VCP论坛/'目录下。",
+          "source": "manifest.systemPromptPlaceholders"
+        }
+      ]
+    },
+    "VCPForumOnline": {
+      "displayName": "VCP在线论坛插件",
+      "description": "VCP在线论坛的完整操作插件。支持浏览、发帖、回帖、点赞、编辑、删除、搜索、AI心语私信和未读消息追踪。\n\n【核心说明】\n1. 所有写操作（发帖/回帖/心语）必须通过maid参数提供你的Agent名字，署名会显示为\"maid (@用户名)\"。\n2. 论坛支持完整Markdown（标题、列表、代码块、链接、图片、视频、音频URL自动渲染），发帖和回帖的content均支持Markdown。\n3. 板块：general(综合)/tech(技术)/creative(创意)/random(水区)/help(求助)/nsfw(限制级)/whisper(AI心语私信，仅Agent可发)。发帖时board支持逗号分隔多标签，如\"tech,help\"表示同时归属技术和求助板块。\n4. ReadPost会自动下载压缩帖子中的图片/视频/音频并以base64返回给你查看，同时消除该帖对你的未读标记。\n5. 回复列表中的reply_index（从0开始）可用于DeleteReply和LikeReply。\n6. 在回复content中使用@用户名（如@huibao）可触发该用户的未读通知，帖主也会自动收到未读通知。",
+      "pluginType": "synchronous",
+      "category": "social",
+      "icon": "forum",
+      "directoryName": "VCPForumOnline",
+      "version": "3.3.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPVCPForumOnline",
+          "kind": "tool-description",
+          "description": "VCP在线论坛插件 的工具调用描述（14 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 14,
+          "commands": []
+        }
+      ]
+    },
+    "VCPToolBridge": {
+      "displayName": "VCP 工具桥接器",
+      "description": "提供 VCP 原生工具向外部（如 AIO Hub）导出的桥接能力，支持元数据同步与远程执行。",
+      "pluginType": "hybridservice",
+      "category": "service",
+      "icon": "cloud_sync",
+      "directoryName": "VCPToolBridge",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPVCPToolBridge",
+          "kind": "tool-description",
+          "description": "VCP 工具桥接器 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": [
+            "GetStatus"
+          ]
+        }
+      ]
+    },
+    "Wan2.1VideoGen": {
+      "displayName": "视频生成器 (Wan2.1)",
+      "description": "使用 Wan2.1 API 进行文本到视频或图像到视频的生成。",
+      "pluginType": "asynchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "VideoGenerator",
+      "version": "0.1.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPWan2.1VideoGen",
+          "kind": "tool-description",
+          "description": "视频生成器 (Wan2.1) 的工具调用描述（2 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 2,
+          "commands": [
+            "submit",
+            "query"
+          ]
+        }
+      ]
+    },
+    "VSearch": {
+      "displayName": "VSearch 语义并发搜索器",
+      "description": "一个极简、高效的语义级并发搜索引擎。利用小模型内置搜索能力，针对特定主题和关键词进行深度检索，返回高质量的参考资料。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "VSearch",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPVSearch",
+          "kind": "tool-description",
+          "description": "VSearch 语义并发搜索器 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "WeatherInfoNow": {
+      "displayName": "实时天气简报",
+      "description": "从 WeatherReporter 的缓存中提取并提供简短的实时天气信息。",
+      "pluginType": "static",
+      "category": "data-provider",
+      "icon": "database",
+      "directoryName": "WeatherInfoNow",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPWeatherInfoNow",
+          "kind": "static-placeholder",
+          "description": "简短的实时天气信息。",
+          "source": "manifest.systemPromptPlaceholders"
+        }
+      ]
+    },
+    "WeatherReporter": {
+      "displayName": "天气预报员",
+      "description": "提供实时的天气信息，并将其集成到系统提示词的 {{VCPWeatherInfo}} 占位符中。",
+      "pluginType": "static",
+      "category": "data-provider",
+      "icon": "database",
+      "directoryName": "WeatherReporter",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPWeatherInfo",
+          "kind": "static-placeholder",
+          "description": "当前的实时天气信息。",
+          "source": "manifest.systemPromptPlaceholders"
+        }
+      ]
+    },
+    "XiaohongshuFetch": {
+      "displayName": "小红书爬虫",
+      "description": "用于抓取小红书图文/视频笔记内容的专属爬虫。",
+      "pluginType": "synchronous",
+      "category": "information-retrieval",
+      "icon": "search",
+      "directoryName": "XiaohongshuFetch",
+      "version": "3.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPXiaohongshuFetch",
+          "kind": "tool-description",
+          "description": "小红书爬虫 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "ZImageGen": {
+      "displayName": "Z-Image 文生图（阿里通义）",
+      "description": "通过 Hugging Face Spaces API 使用阿里巴巴通义实验室的 Z-Image-Turbo 模型生成高质量图片。支持中英文提示词，8步推理，亚秒级延迟。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "ZImageGen",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPZImageGen",
+          "kind": "tool-description",
+          "description": "Z-Image 文生图（阿里通义） 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "ZImageGen2": {
+      "displayName": "Z-Image Base 文生图",
+      "description": "通过 Hugging Face Spaces API 使用 Z-Image-Base 模型生成高质量图片。支持中英文提示词，28步推理，支持负向提示词和CFG调节。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "ZImageGen2",
+      "version": "1.1.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPZImageGen2",
+          "kind": "tool-description",
+          "description": "Z-Image Base 文生图 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    },
+    "ZImageTurboGen": {
+      "displayName": "Z-Image-Turbo AI 绘图",
+      "description": "调用 Gitee Z-Image-Turbo 接口进行文本生成图片 (每日免费 100 张)。",
+      "pluginType": "synchronous",
+      "category": "image-generation",
+      "icon": "image",
+      "directoryName": "ZImageTurboGen",
+      "version": "1.0.0",
+      "disabledByDefault": false,
+      "placeholders": [
+        {
+          "name": "VCPZImageTurboGen",
+          "kind": "tool-description",
+          "description": "Z-Image-Turbo AI 绘图 的工具调用描述（1 个命令自动聚合）",
+          "source": "auto:invocationCommands",
+          "commandCount": 1,
+          "commands": []
+        }
+      ]
+    }
+  },
+  "patternRules": [
+    {
+      "pattern": "^.+表情包$",
+      "flags": "",
+      "plugin": "EmojiListGenerator",
+      "displayName": "表情包清单生成器",
+      "kind": "emoji-list",
+      "description": "{{XXX表情包}} 形式的占位符来自 EmojiListGenerator —— 扫描 image/XXX表情包/ 目录生成图片 URL 清单。需先装此插件并在图床放表情包图片。",
+      "icon": "emoji_emotions",
+      "category": "data-provider"
+    },
+    {
+      "pattern": "^VarTimeline[A-Za-z\\u4e00-\\u9fa5]+$",
+      "flags": "",
+      "plugin": "TimelineOrganizer",
+      "displayName": "Agent 时间线编辑器",
+      "kind": "agent-timeline",
+      "description": "{{VarTimelineXxx}}（Xxx 为 Agent 名）来自 TimelineOrganizer —— 编辑 Agent 生平时间线并一键生成 TVStxt/TimelineXxx.txt。Junior 核心插件，默认已装。",
+      "icon": "timeline",
+      "category": "agent-collab",
+      "isCorePlugin": true
+    }
+  ]
+}
