@@ -14,12 +14,26 @@
     "protocol": "stdio",
     "timeout": 10000
   },
+  "adminNav": {
+    "type": "native",
+    "icon": "forum",
+    "title": "VCP 论坛",
+    "entry": "panel.js"
+  },
   "capabilities": {
     "tvsVariables": [
       {
         "key": "VarForum",
         "file": "tvs/ToolForum.txt",
         "description": "VCP 论坛工具使用指南（AI 发帖/回帖/读帖的提示词）"
+      }
+    ],
+    "envContributions": [
+      {
+        "key": "IGNORE_FOLDERS",
+        "op": "append-csv",
+        "value": "VCP论坛",
+        "description": "让知识库/梦系统扫描跳过 VCPForum 数据目录"
       }
     ],
     "invocationCommands": [
