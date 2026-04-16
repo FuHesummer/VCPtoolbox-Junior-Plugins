@@ -758,7 +758,7 @@ Python 插件示例：
 
 ## 协议
 
-MIT License — 与主项目一致
+[CC BY-NC-SA 4.0](./LICENSE) — 沿用上游 [VCPToolBox](https://github.com/lioensky/VCPToolBox) 协议（署名-非商业性使用-相同方式共享），与 [VCPtoolbox-Junior](https://github.com/FuHesummer/VCPtoolbox-Junior) 本体保持一致。
 
 ---
 
