@@ -1385,5 +1385,10 @@
       "category": "agent-collab",
       "isCorePlugin": true
     }
-  ]
+  ],
+  "{{VCPSkillBridge}}": {
+    "plugin": "SkillBridge",
+    "description": "Skill 技能目录总览与按需读取提示",
+    "type": "static"
+  }
 }

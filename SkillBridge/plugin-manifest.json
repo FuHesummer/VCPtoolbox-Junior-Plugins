@@ -1,0 +1,47 @@
+{
+  "manifestVersion": "1.0.0",
+  "name": "SkillBridge",
+  "version": "1.0.0",
+  "displayName": "Skill 技能目录桥接器",
+  "description": "启动时扫描 SkillBridge 下全部技能的 SKILL.md 前置描述，生成可折叠的技能目录索引，供系统提示词按需感知。",
+  "author": "VCP Team",
+  "pluginType": "static",
+  "entryPoint": {
+    "type": "nodejs",
+    "command": "node SkillBridge.js"
+  },
+  "communication": {
+    "protocol": "process_stdio",
+    "timeout": 30000
+  },
+  "capabilities": {
+    "systemPromptPlaceholders": [
+      {
+        "placeholder": "{{VCPSkillBridge}}",
+        "description": "Skill 技能目录总览与按需读取提示"
+      }
+    ]
+  },
+  "adminNav": {
+    "title": "Skill Bridge",
+    "icon": "psychology",
+    "type": "native"
+  },
+  "configSchema": {
+    "SKILLBRIDGE_HEADER_TEXT": {
+      "type": "string",
+      "description": "技能目录头部说明文本（留空使用默认值）",
+      "default": ""
+    },
+    "SKILLBRIDGE_DEFAULT_THRESHOLD": {
+      "type": "string",
+      "description": "技能折叠阈值（0-1，越高越容易被折叠，默认 0.35）",
+      "default": "0.35"
+    },
+    "SKILLBRIDGE_PATH_MODE": {
+      "type": "string",
+      "description": "SKILL.md 路径格式（relative 或 absolute_windows，默认 absolute_windows）",
+      "default": "absolute_windows"
+    }
+  }
+}
