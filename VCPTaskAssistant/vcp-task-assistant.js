@@ -176,6 +176,22 @@ async function loadData() {
         }
         const raw = await fsPromises.readFile(DATA_FILE, 'utf-8');
         taskCenterData = ensureDataShape(JSON.parse(raw));
+
+        // 🛡️ 启动时清理：重置所有卡死的 running 标志
+        // 服务器重启后不可能有任务正在运行，running=true 只可能是上次崩溃遗留的脏状态
+        let staleCount = 0;
+        for (const task of taskCenterData.tasks) {
+            if (task.runtime.running) {
+                task.runtime.running = false;
+                task.runtime.lastResult = `error: 服务器重启时发现任务卡死，已自动重置`;
+                task.runtime.lastError = '服务器重启自动重置 running 标志';
+                staleCount++;
+            }
+        }
+        if (staleCount > 0) {
+            console.warn(`[TaskAssistant] 🛡️ 启动清理: 重置了 ${staleCount} 个卡死的任务状态`);
+            await saveData();
+        }
     } catch (e) {
         console.error('[TaskAssistant] 加载 task-center-data.json 失败:', e.message);
         taskCenterData = createDefaultData();
@@ -292,7 +308,16 @@ async function executeTask(taskId, triggerSource = 'scheduler') {
     }
 
     if (task.runtime.running) {
-        return { skipped: true, reason: 'already-running' };
+        // 🛡️ 卡死检测：如果 running=true 但距上次开始运行已超过 10 分钟，强制重置
+        const STALE_RUNNING_TIMEOUT_MS = 10 * 60 * 1000; // 10 分钟
+        const lastRunAt = task.runtime.lastRunTime ? new Date(task.runtime.lastRunTime).getTime() : 0;
+        if (Date.now() - lastRunAt > STALE_RUNNING_TIMEOUT_MS) {
+            console.warn(`[TaskAssistant] 🛡️ 检测到任务 "${task.name}" 卡死 (running=true 但已过 ${Math.round((Date.now() - lastRunAt) / 60000)} 分钟)，强制重置`);
+            task.runtime.running = false;
+            task.runtime.lastError = '任务执行超时，已自动重置 running 标志';
+        } else {
+            return { skipped: true, reason: 'already-running' };
+        }
     }
 
     const startedAt = new Date();
