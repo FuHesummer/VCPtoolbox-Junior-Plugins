@@ -31,10 +31,6 @@
       "type": "string",
       "description": "Tavily模式下用于总结的模型名称 (建议使用 claude-3-5-sonnet-20240620)。"
     },
-    "TavilyKey": {
-      "type": "string",
-      "description": "Tavily API Key (仅Tavily模式需要)。"
-    },
     "MaxConcurrent": {
       "type": "integer",
       "description": "并发执行搜索任务的队列上限。"

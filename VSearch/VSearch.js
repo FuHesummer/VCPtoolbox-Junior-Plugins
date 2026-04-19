@@ -1,4 +1,3 @@
-const fs = require('fs').promises;
 const path = require('path');
 const axios = require('axios');
 const dotenv = require('dotenv');
@@ -7,7 +6,6 @@ const { tavily } = require('@tavily/core');
 
 // --- 1. 初始化与配置加载 ---
 const configPath = path.resolve(__dirname, './config.env');
-const rootConfigPath = path.resolve(__dirname, '../../config.env');
 
 dotenv.config({ path: configPath });
 
@@ -408,16 +406,10 @@ async function main(request) {
 
     if (SearchMode === 'tavily') {
         // Tavily 模式：直接调用 Tavily SDK 并发搜索 + 单次总结
-        let tavilyKeyStr = '';
-        try {
-            const rootEnvContent = await fs.readFile(rootConfigPath, 'utf8');
-            const rootEnv = dotenv.parse(rootEnvContent);
-            tavilyKeyStr = rootEnv.TavilyKey || '';
-        } catch (e) {
-            log(`读取根目录配置失败: ${e.message}`);
-        }
+        // TavilyKey 由前置插件 TavilySearch 通过 config.env → process.env 注入
+        const tavilyKeyStr = process.env.TavilyKey || '';
         if (!tavilyKeyStr) {
-            return sendResponse({ status: "error", error: "Tavily 模式需要在根目录 config.env 中配置 TavilyKey。" });
+            return sendResponse({ status: "error", error: "Tavily 模式需要安装并配置 TavilySearch 插件（在 config.env 中设置 TavilyKey）。" });
         }
         const result = await callTavilyMode(SearchTopic, keywordList, tavilyKeyStr);
         return sendResponse({ status: "success", result: `## VSearch 检索报告 [模式: Tavily]\n\n**研究主题**: ${SearchTopic}\n\n${result}` });
