@@ -59,7 +59,7 @@ function initialize(config, dependencies) {
 
     // 加载 KnowledgeBaseManager
     try {
-        knowledgeBaseManager = require('../../KnowledgeBaseManager');
+        knowledgeBaseManager = require('../../modules/KnowledgeBaseManager');
         if (DEBUG_MODE) console.error('[AgentDream] KnowledgeBaseManager loaded.');
         
         const DreamWaveEngine = require('./DreamWaveEngine');
@@ -117,26 +117,35 @@ function shutdown() {
 
 /**
  * 加载梦系统配置和 Agent 定义
- * [Junior 协议] 插件专属配置（DREAM_*）统一在本插件目录的 config.env 中维护，
- *             避免污染根 config.env；向量模型 / API_KEY 等基础配置由根 config.env
- *             注入 process.env，插件会自动继承（如 KnowledgeBaseManager 的依赖）。
+ * [Junior 协议] 核心插件配置（DREAM_*）统一在全局 config.env 中维护（与 FileOperator 同协议）
+ *             优先从 process.env 读取；若未找到任何 DREAM_AGENT_* 条目，则降级到插件目录 config.env（兼容旧版）。
  */
 function loadDreamConfig() {
-    const configEnvPath = path.join(__dirname, 'config.env');
-    let envConfig = {};
+    // 1) 优先从 process.env 读（全局 config.env 已由 dotenv 加载到 process.env）
+    const envConfig = {};
+    const hasGlobalDreamConfig = Object.keys(process.env).some(k => k.startsWith('DREAM_'));
 
-    if (fs.existsSync(configEnvPath)) {
-        try {
-            const content = fs.readFileSync(configEnvPath, { encoding: 'utf8' });
-            envConfig = dotenv.parse(content);
-        } catch (e) {
-            console.error(`[AgentDream] Error parsing config.env: ${e.message}`);
+    if (hasGlobalDreamConfig) {
+        for (const k of Object.keys(process.env)) {
+            if (k.startsWith('DREAM_')) envConfig[k] = process.env[k];
+        }
+        if (DEBUG_MODE) console.error('[AgentDream] 从全局 config.env (process.env) 加载 DREAM_* 配置');
+    } else {
+        // 2) 降级：插件目录 config.env（兼容旧版用户）
+        const configEnvPath = path.join(__dirname, 'config.env');
+        if (fs.existsSync(configEnvPath)) {
+            try {
+                const content = fs.readFileSync(configEnvPath, { encoding: 'utf8' });
+                const parsed = dotenv.parse(content);
+                Object.assign(envConfig, parsed);
+                console.log('[AgentDream] 从插件目录 config.env 加载配置（建议迁移到全局 config.env）');
+            } catch (e) {
+                console.error(`[AgentDream] Error parsing plugin config.env: ${e.message}`);
+            }
+        } else {
+            console.warn('[AgentDream] ⚠️ 全局 config.env 无 DREAM_* 配置，且插件目录 config.env 不存在，梦系统休眠。参考 config.env.example 的 [梦系统插件] 区块。');
             return;
         }
-    } else {
-        if (DEBUG_MODE) console.error('[AgentDream] config.env not found, using defaults.');
-        console.warn('[AgentDream] ⚠️ 未找到插件目录 config.env，梦系统处于休眠状态。请复制 config.env.example 为 config.env 以启用。');
-        return;
     }
 
     // 解析梦调度配置
@@ -1116,6 +1125,62 @@ pluginAdminRouter.delete('/dream-logs/:filename', async (req, res) => {
     } catch (e) {
         if (e.code === 'ENOENT') return res.status(404).json({ success: false, error: 'Not found' });
         res.status(400).json({ success: false, error: e.message });
+    }
+});
+
+// GET /status — 梦系统运行状态（是否已配置 / Agent 列表 / 最近做梦时间 / 调度器状态）
+pluginAdminRouter.get('/status', (req, res) => {
+    try {
+        const agents = Object.keys(DREAM_AGENTS).map(name => ({
+            name,
+            modelId: DREAM_AGENTS[name].modelId,
+            lastDreamAt: lastDreamTimestamps.get(name) || null,
+        }));
+        const hibernating = agents.length === 0;
+        res.json({
+            success: true,
+            hibernating,
+            hasConfig: !hibernating,
+            agents,
+            scheduler: {
+                running: !!dreamSchedulerTimer,
+                isDreamingNow: !!isDreamingInProgress,
+                frequencyHours: DREAM_CONFIG.frequencyHours,
+                timeWindow: { start: DREAM_CONFIG.timeWindowStart, end: DREAM_CONFIG.timeWindowEnd },
+                probability: DREAM_CONFIG.probability,
+            },
+            recallK: DREAM_CONFIG.recallK,
+            tagBoost: DREAM_CONFIG.tagBoost,
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// POST /trigger-dream — 手动触发做梦（绕过时间窗口/概率，直接对指定 Agent 触发）
+// body: { agentName }
+pluginAdminRouter.post('/trigger-dream', async (req, res) => {
+    try {
+        const { agentName } = req.body || {};
+        if (!agentName || typeof agentName !== 'string') {
+            return res.status(400).json({ success: false, error: 'agentName 必填' });
+        }
+        if (!DREAM_AGENTS[agentName]) {
+            return res.status(404).json({
+                success: false,
+                error: `Agent '${agentName}' 未在 DREAM_AGENT_LIST 中配置`,
+                available: Object.keys(DREAM_AGENTS),
+            });
+        }
+        // 异步触发（不阻塞响应），做梦通常耗时 30s~2min
+        triggerDream(agentName).then(result => {
+            console.log(`[AgentDream:AdminAPI] Manual dream for ${agentName}:`, result.status);
+        }).catch(err => {
+            console.error(`[AgentDream:AdminAPI] Manual dream error for ${agentName}:`, err.message);
+        });
+        res.json({ success: true, message: `已触发 ${agentName} 做梦，请稍后刷新查看梦日志` });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
     }
 });
 

@@ -20,6 +20,10 @@
     icon="bedtime"
   >
     <template #actions>
+      <button class="btn btn-primary" :disabled="!status || status.hibernating || triggering" @click="openTriggerPanel">
+        <span class="material-symbols-outlined">auto_awesome</span>
+        手动做梦
+      </button>
       <button class="btn btn-ghost" :disabled="loading" @click="loadLogs">
         <span class="material-symbols-outlined" :class="{ spin: loading }">refresh</span>
         刷新
@@ -28,6 +32,57 @@
   </PageHeader>
 
   <div class="dream-content">
+    <!-- 状态提示卡片 -->
+    <div v-if="status" class="dream-status-card" :class="{ warn: status.hibernating }">
+      <div class="ds-left">
+        <span class="material-symbols-outlined">{{ status.hibernating ? 'warning' : 'cloud_sync' }}</span>
+        <div class="ds-text">
+          <strong v-if="status.hibernating">梦系统休眠中</strong>
+          <strong v-else>梦系统运行中 · {{ status.agents.length }} 个 Agent</strong>
+          <span v-if="status.hibernating">
+            未找到 <code>Plugin/AgentDream/config.env</code>。复制同目录的 <code>config.env.example</code> 为 <code>config.env</code>，填入 <code>DREAM_AGENT_LIST</code> 并重启服务即可启用自动做梦。
+          </span>
+          <span v-else>
+            自动调度：{{ status.scheduler.timeWindow.start }}:00 ~ {{ status.scheduler.timeWindow.end }}:00 ·
+            冷却 {{ status.scheduler.frequencyHours }}h · 概率 {{ Math.round(status.scheduler.probability * 100) }}%
+            <span v-if="status.scheduler.isDreamingNow" class="chip tiny orange">正在做梦…</span>
+          </span>
+        </div>
+      </div>
+      <div v-if="!status.hibernating" class="ds-agents">
+        <span class="chip tiny" v-for="a in status.agents" :key="a.name">{{ a.name }}</span>
+      </div>
+    </div>
+
+    <!-- 手动触发弹窗 -->
+    <div v-if="showTriggerPanel" class="dream-trigger-modal" @click.self="showTriggerPanel = false">
+      <div class="modal-body">
+        <h3>手动触发做梦</h3>
+        <p class="hint">选中一个 Agent 立即做梦（绕过时间窗口和概率判定）。做梦需要 30 秒~2 分钟，结束后梦日志会出现在下方列表。</p>
+        <div class="agent-picker">
+          <button
+            v-for="a in (status?.agents || [])"
+            :key="a.name"
+            class="agent-pill"
+            :class="{ selected: triggerAgent === a.name }"
+            @click="triggerAgent = a.name"
+          >
+            <span class="avatar">{{ a.name.slice(0, 1) }}</span>
+            <strong>{{ a.name }}</strong>
+            <small v-if="a.lastDreamAt">上次 {{ formatTime(a.lastDreamAt) }}</small>
+            <small v-else class="muted">从未做梦</small>
+          </button>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" @click="showTriggerPanel = false">取消</button>
+          <button class="btn btn-primary" :disabled="!triggerAgent || triggering" @click="doTrigger">
+            <span class="material-symbols-outlined" :class="{ spin: triggering }">{{ triggering ? 'hourglass_empty' : 'bedtime' }}</span>
+            {{ triggering ? '触发中...' : '开始做梦' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 工具栏：左侧搜索/过滤 + 右侧统计 -->
     <div class="toolbar-row">
       <div class="search-box">
@@ -239,6 +294,50 @@
       const agentFilter = ref('');
       const openSet = ref(new Set());
       const detailMap = ref(new Map());
+      // 梦系统状态（/status 返回）+ 手动触发弹窗
+      const status = ref(null);
+      const showTriggerPanel = ref(false);
+      const triggerAgent = ref('');
+      const triggering = ref(false);
+
+      async function loadStatus() {
+        try {
+          const body = await api.get('/status');
+          status.value = body && body.success ? body : null;
+        } catch (e) {
+          console.warn('[AgentDream] loadStatus failed:', e.message);
+          status.value = null;
+        }
+      }
+
+      function openTriggerPanel() {
+        if (!status.value || status.value.hibernating) {
+          showToast('梦系统休眠中，请先配置 config.env', 'warning');
+          return;
+        }
+        triggerAgent.value = status.value.agents[0]?.name || '';
+        showTriggerPanel.value = true;
+      }
+
+      async function doTrigger() {
+        if (!triggerAgent.value) return;
+        triggering.value = true;
+        try {
+          const body = await api.post('/trigger-dream', { agentName: triggerAgent.value });
+          if (body.success) {
+            showToast(body.message || `已触发 ${triggerAgent.value} 做梦`, 'success');
+            showTriggerPanel.value = false;
+            // 20 秒后刷新一次（做梦通常不会这么快，但先给个反馈）
+            setTimeout(() => { loadLogs(); loadStatus(); }, 20000);
+          } else {
+            showToast(body.error || '触发失败', 'error');
+          }
+        } catch (e) {
+          showToast('触发失败：' + e.message, 'error');
+        } finally {
+          triggering.value = false;
+        }
+      }
 
       async function loadLogs() {
         loading.value = true;
@@ -363,7 +462,9 @@
         return [];
       }
 
-      onMounted(loadLogs);
+      onMounted(async () => {
+        await Promise.all([loadLogs(), loadStatus()]);
+      });
 
       return {
         logs, loading, searchText, statusFilter, agentFilter, openSet, detailMap,
@@ -371,6 +472,9 @@
         loadLogs, toggleCard, doAction, deleteLog,
         typeKind, typeIcon, typeLabel, statusLabel, normalizeList, getOpsSummary,
         formatTime, markdown,
+        // 手动触发 + 状态
+        status, showTriggerPanel, triggerAgent, triggering,
+        openTriggerPanel, doTrigger,
       };
     },
   };
@@ -385,6 +489,63 @@
     s.textContent = `
 .dream-page { display: flex; flex-direction: column; height: 100%; }
 .dream-content { padding: 0 24px 24px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+
+/* 状态卡片 */
+.dream-status-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 14px;
+  background: var(--card-bg); border: var(--card-border);
+  border-radius: var(--radius-md); box-shadow: var(--card-shadow);
+  backdrop-filter: blur(18px);
+}
+.dream-status-card.warn { border-color: rgba(230, 138, 76, 0.5); background: linear-gradient(135deg, rgba(230, 138, 76, 0.08), rgba(230, 138, 76, 0.02)); }
+.dream-status-card .ds-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.dream-status-card .ds-left > .material-symbols-outlined { font-size: 28px; color: var(--primary-color); flex-shrink: 0; }
+.dream-status-card.warn .ds-left > .material-symbols-outlined { color: #e68a4c; }
+.dream-status-card .ds-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dream-status-card .ds-text strong { font-size: 14px; color: var(--text-color); }
+.dream-status-card .ds-text span { font-size: 12px; color: var(--text-muted); }
+.dream-status-card .ds-text code { background: var(--input-bg); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+.dream-status-card .ds-agents { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* 手动触发弹窗 */
+.dream-trigger-modal {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.dream-trigger-modal .modal-body {
+  width: 540px; max-width: 92vw;
+  background: var(--card-bg); border: var(--card-border);
+  border-radius: var(--radius-lg); box-shadow: var(--card-shadow);
+  padding: 20px 24px;
+}
+.dream-trigger-modal h3 { margin: 0 0 6px; font-size: 16px; color: var(--text-color); }
+.dream-trigger-modal .hint { margin: 0 0 14px; font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.dream-trigger-modal .agent-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 16px; }
+.dream-trigger-modal .agent-pill {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 8px;
+  background: var(--input-bg); border: 1px solid var(--border-color);
+  border-radius: var(--radius-md); cursor: pointer;
+  transition: all 0.15s;
+}
+.dream-trigger-modal .agent-pill:hover { border-color: var(--primary-color); }
+.dream-trigger-modal .agent-pill.selected {
+  border-color: var(--primary-color);
+  background: linear-gradient(135deg, rgba(217, 119, 87, 0.15), rgba(217, 119, 87, 0.05));
+}
+.dream-trigger-modal .agent-pill .avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; color: #fff;
+  background: linear-gradient(135deg, #d97757, #c56646);
+}
+.dream-trigger-modal .agent-pill strong { font-size: 13px; color: var(--text-color); }
+.dream-trigger-modal .agent-pill small { font-size: 10px; color: var(--text-muted); }
+.dream-trigger-modal .agent-pill small.muted { font-style: italic; opacity: 0.6; }
+.dream-trigger-modal .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
 
 /* 工具栏 */
 .toolbar-row {

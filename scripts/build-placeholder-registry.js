@@ -56,16 +56,28 @@ function inferIcon(category) {
   }[category] || 'extension';
 }
 
-function main() {
-  const plugins = {};
+// 尝试解析本体 Plugin/ 路径（用于纳入核心插件到 registry）
+function resolveJuniorPluginDir() {
+  const candidates = [
+    path.resolve(ROOT, '..', 'VCPtoolbox-Junior', 'Plugin'),
+    path.resolve(ROOT, '..', 'VCPToolBox', 'Plugin'),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
 
-  const dirs = fs.readdirSync(ROOT, { withFileTypes: true })
+function scanPluginDir(baseDir, isCore, plugins) {
+  if (!baseDir || !fs.existsSync(baseDir)) return 0;
+  let count = 0;
+  const dirs = fs.readdirSync(baseDir, { withFileTypes: true })
     .filter(d => d.isDirectory() && !d.name.startsWith('.') && !EXCLUDE_DIRS.has(d.name));
 
   for (const d of dirs) {
-    // 优先 plugin-manifest.json，没有则 fallback 到 .block（仓库里默认禁用但可装的插件）
-    const enabledPath = path.join(ROOT, d.name, 'plugin-manifest.json');
-    const blockedPath = path.join(ROOT, d.name, 'plugin-manifest.json.block');
+    // 优先 plugin-manifest.json，没有则 fallback 到 .block
+    const enabledPath = path.join(baseDir, d.name, 'plugin-manifest.json');
+    const blockedPath = path.join(baseDir, d.name, 'plugin-manifest.json.block');
     let manifestPath = null;
     let disabledByDefault = false;
     if (fs.existsSync(enabledPath)) {
@@ -100,6 +112,7 @@ function main() {
       directoryName: d.name,
       version: m.version || null,
       disabledByDefault,
+      isCorePlugin: isCore,  // 核心插件：Panel 视为"默认已装"
       placeholders: [],
     };
 
@@ -148,9 +161,24 @@ function main() {
 
     // 只收集有占位符的插件（对前端有意义）
     if (entry.placeholders.length > 0) {
-      plugins[m.name] = entry;
+      // 核心插件优先（后入的覆盖前入的；但这里核心在第二轮扫描，避免被仓库版本反覆盖）
+      if (!plugins[m.name] || isCore) {
+        plugins[m.name] = entry;
+      }
+      count++;
     }
   }
+  return count;
+}
+
+function main() {
+  const plugins = {};
+
+  // 第一轮：扫插件仓库（商店可装）
+  const storeCount = scanPluginDir(ROOT, false, plugins);
+  // 第二轮：扫本体 Plugin/（核心插件，打 isCorePlugin: true）
+  const juniorPluginDir = resolveJuniorPluginDir();
+  const coreCount = scanPluginDir(juniorPluginDir, true, plugins);
 
   // 特殊 pattern 规则：动态命名占位符不能直接列举，走正则匹配
   const patternRules = [
@@ -170,10 +198,9 @@ function main() {
       plugin: 'TimelineOrganizer',
       displayName: 'Agent 时间线编辑器',
       kind: 'agent-timeline',
-      description: '{{VarTimelineXxx}}（Xxx 为 Agent 名）来自 TimelineOrganizer —— 编辑 Agent 生平时间线并一键生成 TVStxt/TimelineXxx.txt。Junior 核心插件，默认已装。',
+      description: '{{VarTimelineXxx}}（Xxx 为 Agent 名）来自 TimelineOrganizer —— 编辑 Agent 生平时间线并一键生成 TVStxt/TimelineXxx.txt。需从商店安装。',
       icon: 'timeline',
       category: 'agent-collab',
-      isCorePlugin: true,
     },
   ];
 
@@ -181,7 +208,9 @@ function main() {
     pluginCount: Object.keys(plugins).length,
     placeholderCount: Object.values(plugins).reduce((a, p) => a + p.placeholders.length, 0),
     patternRuleCount: patternRules.length,
-    totalScannedDirs: dirs.length,
+    totalScannedDirs: storeCount + coreCount,
+    storePluginCount: storeCount,
+    corePluginCount: coreCount,
   };
 
   const output = {
