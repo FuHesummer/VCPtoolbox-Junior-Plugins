@@ -1,7 +1,7 @@
 {
   "$schema": "./docs/placeholder-registry-schema.json",
   "version": "1.0.0",
-  "generatedAt": "2026-04-19T06:58:24.517Z",
+  "generatedAt": "2026-04-19T14:48:59.627Z",
   "generator": "scripts/build-placeholder-registry.js",
   "description": "VCPtoolbox-Junior-Plugins 占位符注册表 — AdminPanel PromptEditor 查询此文件识别未装插件提供的占位符，给用户友好提示「此变量来自 XXX 插件」+ 一键安装",
   "stats": {
@@ -1090,7 +1090,7 @@
       "category": "information-retrieval",
       "icon": "search",
       "directoryName": "TavilySearch",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "disabledByDefault": false,
       "isCorePlugin": false,
       "placeholders": [
@@ -1312,7 +1312,7 @@
       "category": "information-retrieval",
       "icon": "search",
       "directoryName": "VSearch",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "disabledByDefault": false,
       "isCorePlugin": false,
       "placeholders": [
