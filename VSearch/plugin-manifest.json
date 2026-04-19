@@ -1,7 +1,7 @@
 {
   "manifestVersion": "1.0.0",
   "name": "VSearch",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "displayName": "VSearch 语义并发搜索器",
   "description": "一个极简、高效的语义级并发搜索引擎。利用小模型内置搜索能力，针对特定主题和关键词进行深度检索，返回高质量的参考资料。",
   "author": "VCP",
@@ -30,6 +30,10 @@
     "TavilyModel": {
       "type": "string",
       "description": "Tavily模式下用于总结的模型名称 (建议使用 claude-3-5-sonnet-20240620)。"
+    },
+    "TavilyKey": {
+      "type": "string",
+      "description": "Tavily API Key（与 TavilySearch 插件共用，在根目录 config.env 中配置）。"
     },
     "MaxConcurrent": {
       "type": "integer",
