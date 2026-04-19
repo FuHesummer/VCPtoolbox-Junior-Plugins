@@ -2,7 +2,7 @@
   "manifestVersion": "1.0.0",
   "name": "TavilySearch",
   "displayName": "Tavily 搜索插件",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "使用 Tavily API 进行高级网络搜索。AI可以指定搜索查询、主题、最大结果数，并可选择包含原始内容、图片链接及描述，以及设定搜索时间范围。",
   "author": "Roo",
   "pluginType": "synchronous",
